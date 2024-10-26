@@ -18,5 +18,6 @@
         "makesure": "Before using this template, please read the <a href=\"https://github.com/siyuan-note/plugin-sample\">offical sample</a>, make sure that you've known about the pipeline for plugin developing."
     },
     "hintTitle":"About",
-    "hintDesc":"<a href='https://github.com/anarion80/siyuan-oembed'>siyuan-oembed</a><br>@anarion80"
+    "hintDesc":"<a href='https://github.com/anarion80/siyuan-oembed'>siyuan-oembed</a><br>@anarion80",
+    "insertURLDialogTitle": "Insert URL"
 }

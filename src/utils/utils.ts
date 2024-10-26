@@ -1,5 +1,16 @@
 import getOembed from "@/oembed";
 import { IOperation, IProtyle, Protyle } from "siyuan";
+import { svelteDialog, inputDialog, inputDialogSync } from "@/libs/dialog";
+
+export interface LinkData {
+    title: string;
+    description: string;
+    icon: string;
+    author: string;
+    link: string;
+    thumbnail: string;
+    publisher: string;
+}
 
 export const isExternal = (url: string) => {
     return url.startsWith('https://');
@@ -210,3 +221,184 @@ export const convertToOembed = async (element: HTMLElement, protyle: Protyle) =>
         // }
         protyle.transaction(doOperations);
     };
+
+export const bookmarkAsString = (linkData: LinkData): string => {
+  // const data: LinkData = await getURLMetadata(url);
+  return `<div
+    style="
+        border: 1px solid rgb(222, 222, 222);
+        box-shadow: rgba(0, 0, 0, 0.06) 0px 1px 3px;
+    "
+    ><style>
+    .kg-card {
+    font-family:
+        'Inter Variable',
+        ui-sans-serif,
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        Segoe UI,
+        Roboto,
+        Helvetica Neue,
+        Arial,
+        Noto Sans,
+        sans-serif,
+        Apple Color Emoji,
+        Segoe UI Emoji,
+        Segoe UI Symbol,
+        Noto Color Emoji;
+    }
+    .kg-card {
+        @extend %font-sans;
+    }
+    .kg-card:not(.kg-callout-card) {
+        font-size: 1rem;
+    }
+    /* Add extra margin before/after any cards,
+except for when immediately preceeded by a heading */
+    .post-body :not(.kg-card):not([id]) + .kg-card {
+        margin-top: 6vmin;
+    }
+    .post-body .kg-card + :not(.kg-card) {
+        margin-top: 6vmin;
+    }
+    .kg-bookmark-card,
+    .kg-bookmark-card * {
+        box-sizing: border-box;
+    }
+    .kg-bookmark-card,
+    .kg-bookmark-publisher {
+        position: relative;
+        /* width: 100%; */
+    }
+    .kg-bookmark-card a.kg-bookmark-container,
+    .kg-bookmark-card a.kg-bookmark-container:hover {
+        display: flex;
+        background: var(--bookmark-background-color);
+        text-decoration: none;
+        border-radius: 6px;
+        border: 1px solid var(--bookmark-border-color);
+        overflow: hidden;
+        color: var(--bookmark-text-color);
+    }
+    .kg-bookmark-content {
+        display: flex;
+        flex-direction: column;
+        flex-grow: 1;
+        flex-basis: 100%;
+        align-items: flex-start;
+        justify-content: flex-start;
+        padding: 20px;
+        overflow: hidden;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell',
+            'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+    }
+    .kg-bookmark-title {
+        font-size: 15px;
+        line-height: 1.4em;
+        font-weight: 600;
+    }
+    .kg-bookmark-description {
+        display: -webkit-box;
+        font-size: 14px;
+        line-height: 1.5em;
+        margin-top: 3px;
+        font-weight: 400;
+        max-height: 44px;
+        overflow-y: hidden;
+        opacity: 0.7;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+    }
+    .kg-bookmark-metadata {
+        display: flex;
+        align-items: center;
+        margin-top: 22px;
+        width: 100%;
+        font-size: 14px;
+        font-weight: 500;
+        white-space: nowrap;
+    }
+    .kg-bookmark-metadata > *:not(img) {
+        opacity: 0.7;
+    }
+    .kg-bookmark-icon {
+        width: 20px;
+        height: 20px;
+        margin-right: 6px;
+    }
+    .kg-bookmark-author,
+    .kg-bookmark-publisher {
+        display: inline;
+    }
+    .kg-bookmark-publisher {
+        text-overflow: ellipsis;
+        overflow: hidden;
+        max-width: 240px;
+        white-space: nowrap;
+        display: block;
+        line-height: 1.65em;
+    }
+    .kg-bookmark-metadata > span:nth-of-type(2) {
+        font-weight: 400;
+    }
+    .kg-bookmark-metadata > span:nth-of-type(2):before {
+        content: '•';
+        margin: 0 6px;
+    }
+    .kg-bookmark-metadata > span:last-of-type {
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .kg-bookmark-thumbnail {
+        position: relative;
+        flex-grow: 1;
+        min-width: 33%;
+    }
+    .kg-bookmark-thumbnail img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover; /* or contain */
+        position: absolute;
+        top: 0;
+        left: 0;
+        border-radius: 0 2px 2px 0;
+    }
+</style><div>
+            <figure class="kg-card kg-bookmark-card">
+                <a class="kg-bookmark-container" href="${linkData.link}"
+                    ><div class="kg-bookmark-content">
+                        <div class="kg-bookmark-title">${linkData.title}</div>
+                        <div class="kg-bookmark-description">${linkData.description}</div>
+                        <div class="kg-bookmark-metadata">
+                            <img class="kg-bookmark-icon" src="${linkData.icon}" alt="Link icon" />
+                            <span class="kg-bookmark-author">${linkData.author}</span>
+                            <span class="kg-bookmark-publisher">${linkData.publisher}</span>
+                        </div>
+                    </div><div class="kg-bookmark-thumbnail">
+                                <img src="${linkData.thumbnail}" alt="Link thumbnail" />
+                            </div>
+                </a>
+            </figure></div></div>
+            `;
+};
+
+
+
+export const microlinkScraper = async (url) => {
+    return fetch(`https://api.microlink.io/?url=${encodeURI(url)}`)
+        .then((res) => {
+            if (res.ok) {
+                return res.json();
+            }
+            return null;
+        })
+        .then((data) => {
+            return {
+                title: data.data.title,
+                description: data.data.description,
+                url: url,
+                image: data.data.logo ? data.data.logo.url : data.data.image ? data.data.image.url : '',
+            };
+        });
+    }
