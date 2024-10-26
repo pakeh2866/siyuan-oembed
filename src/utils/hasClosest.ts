@@ -19,3 +19,15 @@ export const hasClosestByAttribute = (element: Node, attr: string, value: string
     }
     return isClosest && e;
 };
+
+export const hasClosestBlock = (element: Node) => {
+    const nodeElement = hasClosestByAttribute(element, "data-node-id", null);
+    if (
+        nodeElement &&
+        nodeElement.tagName !== "BUTTON" &&
+        nodeElement.getAttribute("data-type")?.startsWith("Node")
+    ) {
+        return nodeElement;
+    }
+    return false;
+};
