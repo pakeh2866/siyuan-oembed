@@ -15,14 +15,6 @@ type Config = {
     params?: {[key: string]: unknown}
 }
 
-type GetConfig = ({
-    url,
-    provider,
-}: {
-    url: string
-    provider: Provider
-}) => Config | null | undefined
-
 type OEmbedData = {
     html: string;
     version: string;
@@ -40,18 +32,6 @@ type OEmbedData = {
     thumbnail_height: number;
     thumbnail_url: typeof URL;
 };
-
-type ErrorParams = {
-    error: unknown;
-    url: string;
-    transformer: Transformer<Config | GetConfig>;
-};
-
-type Transformer<T> = {
-    name: string
-    shouldTransform: (url: string) => Promise<boolean>
-    getHTML: (url: string, getConfig?: T) => Promise<string>
-}
 
 // eslint-disable-next-line @typescript-eslint/no-namespace
 namespace ProvidersCache {
@@ -79,15 +59,7 @@ export const getProviderEndpointURLForURL = async (url: string): Promise<{ provi
     return null;
 };
 
-// export const handleHTML = (html: string): string => {
-//     // To use twitter's widget.js, you have to wrap by <div></div> to work with @remark-embedder/core.
-//     if (url.includes('twitter.com') || url.includes('x.com')) {
-//         return `<div style="display: flex; flex-direction: column; align-items: center; width: 100%; max-width: 550px ">${html}</div>`;
-//     }
-//     return html;
-// };
-
-export const oembedConfig = ({ provider }: { url: string; provider: { provider_name: string } }): Config => {
+const oembedConfig = ({ provider }: { url: string; provider: { provider_name: string } }): Config => {
     if (provider.provider_name === 'Twitter' || provider.provider_name === 'X') {
         return {
             params: { theme: 'dark', dnt: true, omit_script: false },
@@ -102,36 +74,9 @@ export const oembedConfig = ({ provider }: { url: string; provider: { provider_n
     return { params: {} };
 };
 
-export const handleError = ({ url, transformer }: ErrorParams): string => {
-    if (transformer.name === 'AstroSimply') {
-        if (url.includes('twitter.com') || url.includes('x.com')) {
-            return `<p>Unable to embed <a href="${url}">this tweet</a></p>`;
-        }
-    }
-    return `<p><a href="${url}">${url}</a></p>`;
-};
-
-const transformer: Transformer<Config | GetConfig> = {
-    name: 'siyuan-oembed-transformer',
-    shouldTransform: async url => {
-        // console.log('🚀 ~ shouldTransform: ~ url:', url);
-        // // check if we got a valid URL
-        // const urlRegex = new RegExp(
-        //     /((([A-Za-z]{3,9}:(?:\/\/)?)(?:[-;:&=+$,\w]+@)?[A-Za-z0-9.-]+(:[0-9]+)?|(?:www.|[-;:&=+$,\w]+@)[A-Za-z0-9.-]+)((?:\/[+~%/.\w-_]*)?\??(?:[-+=&;%@.\w_]*)#?(?:[\w]*))?)/
-        // );
-        // if (!urlRegex.test(url)) {
-        //     console.log('🚩 Not a valid URL!:', url);
-        //     return false;
-        // }
-        // // Return true because we want to use the bookmark later in getHTML if it is not an oembed URL
-        // return true;
-        const result = await getProviderEndpointURLForURL(url);
-        return Boolean(result);
-    },
-    getHTML: async (urlString) => {
+export const getOembed = async (urlString: string ): Promise<string> => {
         const result = await getProviderEndpointURLForURL(urlString)
 
-        // istanbul ignore if (shouldTransform prevents this, but if someone calls this directly then this would save them)
         if (!result) return null
 
         const {provider, endpoint} = result
@@ -147,13 +92,15 @@ const transformer: Transformer<Config | GetConfig> = {
         // format has to be json so it is not configurable
         url.searchParams.set('format', 'json')
 
-        const res = await fetch(url.toString())
-        const data = (await res.json()) as OEmbedData
+        let data: OEmbedData | null = null;
+        try {
+            const res = await fetch(url.toString())
+            data = (await res.json()) as OEmbedData;
+        } catch (error) {
+            console.error('Error fetching oembed data', error);
+        }
 
-        return data.html
-    },
+        return data?.html ?? null
 }
 
-export default transformer
-type ExportedConfig = Config | GetConfig
-export type {ExportedConfig as Config}
+export default getOembed
