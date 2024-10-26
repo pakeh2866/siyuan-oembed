@@ -17,10 +17,13 @@ import {
     lockScreen,
     ICard,
     ICardData,
+    IMenuItemOption,
+    IToolbarItem,
     Lute
 } from "siyuan";
 import { hasClosestByAttribute } from "./utils/hasClosest";
-import { getProviderEndpointURLForURL, oembedConfig } from "./oembed";
+import { getOembed } from "./oembed";
+import { escapeHtml, genHtmlBlock, getCurrentBlock } from "@/utils/utils"
 import "@/index.scss";
 
 import HelloExample from "@/hello.svelte";
@@ -30,76 +33,28 @@ import { SettingUtils } from "./libs/setting-utils";
 import { svelteDialog } from "./libs/dialog";
 
 const STORAGE_NAME = "menu-config";
-const TAB_TYPE = "custom_tab";
-const DOCK_TYPE = "dock_tab";
 
-const builtinEditTools:{[key:string]:string[]}= {
-        "block-ref": ["iconRef","引用"],
-        "a": ["iconLink","链接"],
-        "text": ["iconFont","外观"],
-        "strong": ["iconBold","粗体"],
-        "em": ["iconItalic","斜体"],
-        "u": ["iconUnderline","下划线"],
-        "s": ["iconStrike","删除线"],
-        "mark": ["iconMark","标记"],
-        "sup": ["iconSup","上标"],
-        "sub": ["iconSub","下标"],
-        "clear": ["iconClear","清除行级元素"],
-        "code": ["iconInlineCode","行级代码"],
-        "kbd": ["iconKeymap","键盘"],
-        "tag": ["iconTags","标签"],
-        "inline-math": ["iconMath","行级公式"],
-        "inline-memo": ["iconM","备注"],
-    }
-
-const regexp = {
-    id: /^\d{14}-[0-9a-z]{7}$/, // 块 ID 正则表达式
-    url: /^siyuan:\/\/blocks\/(\d{14}-[0-9a-z]{7})/, // 思源 URL Scheme 正则表达式
-    snippet: /^\d{14}-[0-9a-z]{7}$/, // 代码片段 ID
-    created: /^\d{10}$/, // 文件历史创建时间
-    history: /[/\\]history[/\\]\d{4}-\d{2}-\d{2}-\d{6}-(clean|update|delete|format|sync|replace)([/\\]\d{14}-[0-9a-z]{7})+\.sy$/, // 历史文档路径
-    snapshot: /^[0-9a-f]{40}$/, // 快照对象 ID
-    shorthand: /^\d{13}$/, // 收集箱项 ID
-};
-
-export function isSiyuanBlock(element: any): boolean {
-    return !!(element
-        && element instanceof HTMLElement
-        && element.dataset.type
-        && element.dataset.nodeId
-        && regexp.id.test(element.dataset.nodeId)
-    );
-}
-
-export function getCurrentBlock(): Node | null | undefined {
-    const selection = document.getSelection();
-    let element = selection?.focusNode;
-    while (element // 元素存在
-        && (!(element instanceof HTMLElement) // 元素非 HTMLElement
-            || !isSiyuanBlock(element) // 元素非思源块元素
-        )
-    ) {
-        element = element.parentElement;
-    }
-    return element;
-}
-
-const genHtmlBlock = (data: DOMStringMap) => {
-    return `<div data-node-id="${data.id}" data-node-index="${data.index}" data-type="NodeHTMLBlock" class="render-node protyle-wysiwyg--select" updated="${data.updated}" data-subtype="block">
-    <div class="protyle-icons">
-        <span class="b3-tooltips__nw b3-tooltips protyle-icon protyle-icon--first protyle-action__edit" aria-label="Edit">
-            <svg><use xlink:href="#iconEdit"></use></svg>
-        </span>
-        <span class="b3-tooltips__nw b3-tooltips protyle-icon protyle-action__menu protyle-icon--last" aria-label="More">
-            <svg><use xlink:href="#iconMore"></use></svg>
-        </span>
-    </div>
-    <div>
-        <protyle-html data-content="${data.content}"></protyle-html>
-        <span style="position: absolute"></span>
-    </div>
-    <div class="protyle-attr" contenteditable="false"></div></div>`;
-};
+const builtinEditTools: Array<string | IToolbarItem> = [
+    "block-ref",
+    "a",
+    "|",
+    "text",
+    "strong",
+    "em",
+    "u",
+    "s",
+    "mark",
+    "sup",
+    "sub",
+    "clear",
+    "|",
+    "code",
+    "kbd",
+    "tag",
+    "inline-math",
+    "inline-memo",
+    "|"
+]
 
 export default class OembedPlugin extends Plugin {
 
@@ -182,48 +137,6 @@ export default class OembedPlugin extends Plugin {
 
         // this.eventBus.on("paste", this.handlePaste);
 
-//         const statusIconTemp = document.createElement("template");
-//         statusIconTemp.innerHTML = `<div class="toolbar__item ariaLabel" aria-label="Remove Oembed Plugin Data">
-//     <svg>
-//         <use xlink:href="#iconTrashcan"></use>
-//     </svg>
-// </div>`;
-//         statusIconTemp.content.firstElementChild.addEventListener("click", () => {
-//             confirm("⚠️", this.i18n.confirmRemove.replace("${name}", this.name), () => {
-//                 this.removeData(STORAGE_NAME).then(() => {
-//                     this.data[STORAGE_NAME] = { readonlyText: "Readonly" };
-//                     showMessage(`[${this.name}]: ${this.i18n.removedData}`);
-//                 });
-//             });
-//         });
-//         this.addStatusBar({
-//             element: statusIconTemp.content.firstElementChild as HTMLElement,
-//         });
-
-        // this.addCommand({
-        //     langKey: "showDialog",
-        //     hotkey: "⇧⌘O",
-        //     callback: () => {
-        //         this.showDialog();
-        //     },
-        //     fileTreeCallback: (file: any) => {
-        //         console.log(file, "fileTreeCallback");
-        //     },
-        //     editorCallback: (protyle: any) => {
-        //         console.log(protyle, "editorCallback");
-        //     },
-        //     dockCallback: (element: HTMLElement) => {
-        //         console.log(element, "dockCallback");
-        //     },
-        // });
-        // this.addCommand({
-        //     langKey: "getTab",
-        //     hotkey: "⇧⌘M",
-        //     globalCallback: () => {
-        //         console.log(this.getOpenedTab());
-        //     },
-        // });
-
         this.settingUtils = new SettingUtils({
             plugin: this, name: STORAGE_NAME
         });
@@ -271,134 +184,27 @@ export default class OembedPlugin extends Plugin {
             }
         }];
 
-        this.loadData("keylistConfig2").then((keylists)=>{
-            console.log(`${this.name} 加载top bar配置:`)
-            console.log(keylists)
-            console.log(`length:${keylists.length}个`)
-            // console.log(typeof keylists)
-            // console.log( keylists instanceof Array)
-            if(keylists instanceof Array){
-                for (let i = 0; i < keylists.length; i++) {
-                    let shortcutCfg = keylists[i];
-                    console.log(`${i} ${shortcutCfg.enable?"启用":"禁用"} ${shortcutCfg.shortcut}`)
-                    if (!shortcutCfg.enable) {
-                        continue
+        this.protyleOptions = {
+            toolbar: [...builtinEditTools,
+                {
+                    name: "insert-oembed",
+                    icon: "iconOembed",
+                    hotkey: "⇧⌘L",
+                    tipPosition: "n",
+                    tip: this.i18n.insertOembed,
+                    click: (protyle: Protyle) => {
+                        // this.showDialog();
+                        // protyle.insert("oembed");
+                        console.log("🚀 ~ OembedPlugin ~ callback ~ getCurrentBlock:", getCurrentBlock())
                     }
-                    console.log("shortcutCfg:")
-                    console.log(shortcutCfg)
-                    //只添加没有id的 (即用户自定义的)
-                    if (shortcutCfg.id) {
-                        continue
-                    }
-                    this.addTopBar({
-                        icon: shortcutCfg.icon,
-                        title: shortcutCfg.shortcut + "\n" + shortcutCfg.title,
-                        position: shortcutCfg.position,
-                        callback: () => {
-                            console.log("点击了:工具栏 3");
-                            console.log(shortcutCfg.shortcut);
-                            console.log(shortcutCfg.keyinfo);
-                            let keyinfo = JSON.parse(shortcutCfg.keyinfo);
-                            // document.body.dispatchEvent(new KeyboardEvent("keydown", {...keyinfo, bubbles: true}));
-
-                            // window.dispatchEvent(new KeyboardEvent('keydown', {...keyinfo}));
-                            // document.body.dispatchEvent(new KeyboardEvent('keydown', {...keyinfo}));
-                            let editor = document.querySelector(".layout__center [data-type='wnd'].layout__wnd--active > .layout-tab-container > div:not(.fn__none) .protyle-wysiwyg") as HTMLElement;
-                            console.log("editor:");
-                            console.log(editor);
-                            // cancelable:true
-                            if (1) {
-                                if (editor) {
-                                    let esc={"ctrlKey":false,"shiftKey":false,"altKey":false,"metaKey":false,"key":"Escape","code":"Escape","keyCode":27};
-                                    window.dispatchEvent(new KeyboardEvent("keydown", {...esc, bubbles: true}));
-                                    // editor.dispatchEvent(new KeyboardEvent("keydown", {...keyinfo, bubbles: true}));
-                                    setTimeout(()=>{
-                                        editor.dispatchEvent(new KeyboardEvent("keydown", {...keyinfo, bubbles: true}));
-                                    },100)
-                                }else {
-                                    document.body.dispatchEvent(new KeyboardEvent("keydown", {...keyinfo, bubbles: true}));
-                                }
-                            }
-                        }
-                    });
-                }
-            }
-        })
-
-        // this.protyleOptions = {
-        //     toolbar: ["block-ref",
-        //         "a",
-        //         "|",
-        //         "text",
-        //         "strong",
-        //         "em",
-        //         "u",
-        //         "s",
-        //         "mark",
-        //         "sup",
-        //         "sub",
-        //         "clear",
-        //         "|",
-        //         "code",
-        //         "kbd",
-        //         "tag",
-        //         "inline-math",
-        //         "inline-memo",
-        //         "|",
-        //         {
-        //             name: "insert-oembed",
-        //             // icon: "iconTransform",
-        //             // icon: "iconLink",
-        //             // icon: "iconA",
-        //             icon: "iconOembed",
-        //             hotkey: "⇧⌘L",
-        //             tipPosition: "n",
-        //             tip: this.i18n.insertOembed,
-        //             // click(protyle: Protyle) {
-        //             //     this.showDialog();
-        //             //     // protyle.insert("oembed");
-        //             // }
-        //             click: (protyle: Protyle) => {
-        //                 this.showDialog();
-        //                 protyle.insert("oembed");
-        //             }
-        //         }],
-        // };
+                }],
+        };
 
         console.log(this.i18n.helloPlugin);
     }
 
     // handlePaste(arg0: string, handlePaste: any) {
     //     throw new Error("Method not implemented.");
-    // }
-
-
-
-    // onLayoutReady() {
-    //     // this.loadData(STORAGE_NAME);
-    //     this.settingUtils.load();
-    //     console.log(`frontend: ${getFrontend()}; backend: ${getBackend()}`);
-
-    //     let tabDiv = document.createElement("div");
-    //     new HelloExample({
-    //         target: tabDiv,
-    //         props: {
-    //             app: this.app,
-    //         }
-    //     });
-    //     this.customTab = this.addTab({
-    //         type: TAB_TYPE,
-    //         init() {
-    //             this.element.appendChild(tabDiv);
-    //             console.log(this.element);
-    //         },
-    //         beforeDestroy() {
-    //             console.log("before destroy tab:", TAB_TYPE);
-    //         },
-    //         destroy() {
-    //             console.log("destroy tab:", TAB_TYPE);
-    //         }
-    //     });
     // }
 
     async onunload() {
@@ -411,19 +217,6 @@ export default class OembedPlugin extends Plugin {
     uninstall() {
         console.log("uninstall");
     }
-
-    // async updateCards(options: ICardData) {
-    //     options.cards.sort((a: ICard, b: ICard) => {
-    //         if (a.blockID < b.blockID) {
-    //             return -1;
-    //         }
-    //         if (a.blockID > b.blockID) {
-    //             return 1;
-    //         }
-    //         return 0;
-    //     });
-    //     return options;
-    // }
 
     /**
      * A custom setting panel provided by svelte
@@ -468,102 +261,48 @@ export default class OembedPlugin extends Plugin {
                 const doOperations: IOperation[] = [];
                 detail.blockElements.forEach(async (item: HTMLElement) => {
                     console.log("🚀 ~ OembedPlugin ~ detail.blockElements.forEach ~ item:", item)
-
-                Object.entries(item).forEach(([key, value]) => {
-                    console.log(`${key}: ${value}`);
-                });
-                    Object.entries(item).map(([key, value]) => {
-                        console.log("🚀 ~ OembedPlugin ~ detail.blockElements.forEach ~ item:", key, value)
-                    })
                     console.log("🚀 ~ OembedPlugin ~ detail.blockElements.forEach ~ item.outerHTML:", item.outerHTML)
                     console.log("🚀 ~ OembedPlugin ~ detail.blockElements.forEach ~ item.index:", item.dataset.nodeIndex)
                     console.log("🚀 ~ OembedPlugin ~ detail.blockElements.forEach ~ item.updated:", item.getAttribute("updated"))
                     const editElement = item.querySelector('[contenteditable="true"]');
                     console.log("🚀 ~ OembedPlugin ~ detail.blockElements.forEach ~ editElement:", editElement)
-                    const link = document.querySelectorAll('.protyle-wysiwyg span.img');
 
-                    if (editElement.firstElementChild?.getAttribute("data-type") === "a" && editElement.firstElementChild?.getAttribute("data-href")) {
+                    if (editElement?.firstElementChild?.getAttribute("data-type") === "a" && editElement?.firstElementChild?.getAttribute("data-href")) {
                         const urlString = editElement.firstElementChild.getAttribute("data-href")
-                        // const urlString = Lute.EscapeHTMLStr(editElement.firstElementChild.getAttribute("data-href"))
-                        console.log("🚀 ~ OembedPlugin ~ detail.blockElements.forEach ~ We have a link!")
-                        console.log("🚀 ~ OembedPlugin ~ detail.blockElements.forEach ~ url:", urlString)
-                        const result = await getProviderEndpointURLForURL(urlString )
 
-                        // istanbul ignore if (shouldTransform prevents this, but if someone calls this directly then this would save them)
-                        if (!result) return null
+                        const html = await getOembed(urlString)
+                        if (html) {
+                            console.log("🚀 ~ OembedPlugin ~ detail.blockElements.forEach ~ html:", html)
 
-                        const {provider, endpoint} = result
-                        console.log("🚀 ~ OembedPlugin ~ detail.blockElements.forEach ~ result:", result)
 
-                        const url = new URL(endpoint)
-                        url.searchParams.set('url', urlString)
+                            console.log("🚀 ~ OembedPlugin ~ detail.blockElements.forEach ~ editElement:", editElement)
 
-                        const config = oembedConfig({ url: urlString, provider });
-                        for (const [key, value] of Object.entries(config.params ?? {})) {
-                            url.searchParams.set(key, String(value));
-                        }
+                            editElement.textContent = html.replace(/&/g, '&amp;').replace(/'/g, '&apos;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                            console.log("🚀 ~ OembedPlugin ~ detail.blockElements.forEach ~ textContent:", editElement.textContent)
+                            console.log("🚀 ~ OembedPlugin ~ detail.blockElements.forEach ~ item.outerHTML:", item.outerHTML)
+                            console.log("🚀 ~ OembedPlugin ~ detail.blockElements.forEach ~ genHtmlBlock:", genHtmlBlock({
+                                    id: item.dataset.nodeId,
+                                    index: item.dataset.nodeIndex,
+                                    updated: item.getAttribute("updated"),
+                                    content: html
+                                }))
+                            item.outerHTML = genHtmlBlock({
+                                    id: item.dataset.nodeId,
+                                    index: item.dataset.index,
+                                    updated: item.dataset.updated,
+                                    content: escapeHtml(html)
+                                });
+                            // item.dataset.type = "NodeHTMLBlock";
+                            // item.dataset.class = "render-node protyle-wysiwyg--select";
+                            // item.dataset.subtype = "block"
 
-                        // format has to be json so it is not configurable
-                        url.searchParams.set('format', 'json')
-
-                        const res = await fetch(url.toString())
-                        const data = (await res.json())
-                        console.log("🚀 ~ OembedPlugin ~ detail.blockElements.forEach ~ data.html:", data.html)
-
-                        console.log("🚀 ~ OembedPlugin ~ detail.blockElements.forEach ~ editElement:", editElement)
-                        // handle converting the link to oembed data
-
-                        // this.handleLink(editElement);
-                        editElement.textContent = data.html.replace(/&/g, '&amp;').replace(/'/g, '&apos;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-                        console.log("🚀 ~ OembedPlugin ~ detail.blockElements.forEach ~ textContent:", editElement.textContent)
-                        console.log("🚀 ~ OembedPlugin ~ detail.blockElements.forEach ~ item.outerHTML:", item.outerHTML)
-                        console.log("🚀 ~ OembedPlugin ~ detail.blockElements.forEach ~ genHtmlBlock:", genHtmlBlock({
+                            doOperations.push({
                                 id: item.dataset.nodeId,
-                                index: item.dataset.nodeIndex,
-                                updated: item.getAttribute("updated"),
-                                content: data.html
-                            }))
-                        item.outerHTML = genHtmlBlock({
-                                id: item.dataset.nodeId,
-                                index: item.dataset.index,
-                                updated: item.dataset.updated,
-                                content: data.html.replace(/&/g, '&amp;').replace(/'/g, '&apos;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+                                data: item.outerHTML,
+                                action: "update"
                             });
-                        // item.dataset.type = "NodeHTMLBlock";
-                        // item.dataset.class = "render-node protyle-wysiwyg--select";
-                        // item.dataset.subtype = "block"
-
-                        doOperations.push({
-                            id: item.dataset.nodeId,
-                            data: item.outerHTML,
-                            // data: genHtmlBlock({
-                            //     id: item.dataset.nodeId,
-                            //     index: item.dataset.index,
-                            //     updated: item.dataset.updated,
-                            //     content: data.html
-                            // }),
-                            // data: data.html,
-                            action: "update"
-                        });
-
-                        // return data.html
-
-                        // format has to be json so it is not configurable
-                        // aElement.firstElementChild.getAttribute("data-href")
-                        // if (editElement.firstElementChild.textContent.indexOf("...") > -1) {
-                        //     tip = Lute.EscapeHTMLStr(aElement.firstElementChild.getAttribute("data-href"));
-                        // }
+                        }
                     }
-
-                    // const aElement = hasClosestByAttribute(editElement, "data-type", "a");
-                    // if (aElement) {
-                    //     const linkAddress = aElement.getAttribute("data-href");
-                    //     console.log("🚀 ~ OembedPlugin ~ detail.blockElements.forEach ~ linkAddress:", linkAddress)
-
-                    // }
-                    // if (editElement) {
-
-                    // }
                 });
                 detail.protyle.getInstance().transaction(doOperations);
             }
