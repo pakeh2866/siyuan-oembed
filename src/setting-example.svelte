@@ -1,75 +1,17 @@
 <script lang="ts">
-    import { showMessage } from "siyuan";
     import SettingPanel from "./libs/components/setting-panel.svelte";
 
-    let groups: string[] = ["🌈 Group 1", "✨ Group 2"];
+    let groups: string[] = ["⚙ Settings"];
     let focusGroup = groups[0];
 
     const group1Items: ISettingItem[] = [
         {
             type: 'checkbox',
-            title: 'checkbox',
-            description: 'checkbox',
+            title: 'Enable automatic embedding',
+            description: 'Enable automatic embeddings of all links',
             key: 'a',
             value: true
         },
-        {
-            type: 'textinput',
-            title: 'text',
-            description: 'This is a text',
-            key: 'b',
-            value: 'This is a text',
-            placeholder: 'placeholder'
-        },
-        {
-            type: 'textarea',
-            title: 'textarea',
-            description: 'This is a textarea',
-            key: 'b2',
-            value: 'This is a textarea',
-            placeholder: 'placeholder',
-            direction: 'row'
-        },
-        {
-            type: 'select',
-            title: 'select',
-            description: 'select',
-            key: 'c',
-            value: 'x',
-            options: {
-                x: 'x',
-                y: 'y',
-                z: 'z'
-            }
-        }
-    ];
-
-    const group2Items: ISettingItem[] = [
-        {
-            type: 'button',
-            title: 'button',
-            description: 'This is a button',
-            key: 'e',
-            value: 'Click Button',
-            button: {
-                label: 'Click Me',
-                callback: () => {
-                    showMessage('Hello, world!');
-                }
-            }
-        },
-        {
-            type: 'slider',
-            title: 'slider',
-            description: 'slider',
-            key: 'd',
-            value: 50,
-            slider: {
-                min: 0,
-                max: 100,
-                step: 1
-            }
-        }
     ];
 
     /********** Events **********/
@@ -117,14 +59,6 @@
                 💡 This is our default settings.
             </div>
         </SettingPanel>
-        <SettingPanel
-            group={groups[1]}
-            settingItems={group2Items}
-            display={focusGroup === groups[1]}
-            on:changed={onChanged}
-            on:click={({ detail }) => { console.debug("Click:", detail.key); }}
-        >
-        </SettingPanel>
     </div>
 </div>
 
@@ -136,4 +70,3 @@
         padding-left: 1rem;
     }
 </style>
-

@@ -1,11 +1,11 @@
 {
-  "name": "plugin-sample-vite-svelte",
-  "version": "0.3.6",
+  "name": "siyuan-oembed",
+  "version": "0.0.0",
   "type": "module",
-  "description": "This is a sample plugin based on vite and svelte for Siyuan (https://b3log.org/siyuan)",
-  "repository": "",
-  "homepage": "",
-  "author": "frostime",
+  "description": "A plugin that extracts oembed data when pasting or creating a link",
+  "repository": "https://github.com/anarion80/siyuan-oembed",
+  "homepage": "https://github.com/anarion80/siyuan-oembed",
+  "author": "anarion80",
   "license": "MIT",
   "scripts": {
     "dev": "cross-env NODE_ENV=development VITE_SOURCEMAP=inline vite build --watch",
