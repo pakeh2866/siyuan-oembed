@@ -9,7 +9,7 @@
     "removedData": "Data deleted",
     "confirmRemove": "Confirm to delete the data in ${name}?",
     "insertEmoji": "Insert Emoji",
-    "insertOembed": "Insert Oembed Link",
+    "toggleOembed": "Toggle Oembed Link",
     "removeSpace": "Remove Space",
     "convertOembed": "Convert to Oembed Link",
     "getTab": "Print out all opened custom tabs in the debugger",

@@ -1,3 +1,6 @@
+import getOembed from "@/oembed";
+import { IOperation, IProtyle, Protyle } from "siyuan";
+
 export const isExternal = (url: string) => {
     return url.startsWith('https://');
 };
@@ -41,9 +44,21 @@ export const isSiyuanBlock = (element: any): boolean => {
     );
 }
 
-export const getCurrentBlock = (): Node | null | undefined => {
+export const getCurrentBlock = (): HTMLElement | null | undefined => {
     const selection = document.getSelection();
-    let element = selection?.focusNode;
+    let element: HTMLElement | null | undefined = selection?.focusNode as HTMLElement;
+    while (element
+        && (!isSiyuanBlock(element)
+        )
+    ) {
+        element = element.parentElement as HTMLElement;
+    }
+    return element;
+}
+
+export const isParagraphBlock = (): boolean=> {
+    const selection = document.getSelection();
+    let element: Node | null = selection?.focusNode;
     while (element
         && (!(element instanceof HTMLElement)
             || !isSiyuanBlock(element)
@@ -51,10 +66,36 @@ export const getCurrentBlock = (): Node | null | undefined => {
     ) {
         element = element.parentElement;
     }
-    return element;
+    return element instanceof HTMLElement && element.dataset.type === "NodeParagraph";
 }
 
-// export const isEmptyParagraph = (): boolean => {
+export const isHTMLBlock = (): boolean=> {
+    const selection = document.getSelection();
+    let element: Node | null = selection?.focusNode;
+    while (element
+        && (!(element instanceof HTMLElement)
+            || !isSiyuanBlock(element)
+        )
+    ) {
+        element = element.parentElement;
+    }
+    return element instanceof HTMLElement && element.dataset.type === "NodeHTMLBlock";
+}
+
+export const isEmptyParagraphBlock = (): boolean => {
+    const selection = document.getSelection();
+    let element: Node | null = selection?.focusNode;
+    while (element
+        && (!(element instanceof HTMLElement)
+            || !isSiyuanBlock(element)
+        )
+    ) {
+        element = element.parentElement;
+    }
+    return element instanceof HTMLElement && element.dataset.type === "NodeParagraph" && element.querySelector('[contenteditable="true"]')?.textContent.trim() === '';
+}
+
+// export const isEmptyBlock = (): boolean=> {
 //     const selection = document.getSelection();
 //     let element: Node | null = selection?.focusNode;
 //     while (element
@@ -64,47 +105,27 @@ export const getCurrentBlock = (): Node | null | undefined => {
 //     ) {
 //         element = element.parentElement;
 //     }
-//     if (element instanceof HTMLElement) {
-//         const editElement = element.querySelector('[contenteditable="true"]');
-//         return editElement ? editElement.textContent.trim() === '' && element.dataset.type === "NodeParagraph": false;
-//     } else {
-//         // handle the case where element is not an HTMLElement
-//         return false;
-//     }
+//     return element instanceof HTMLElement && element.querySelector('[contenteditable="true"]')?.textContent.trim() === '';
 // }
 
-export const isEmptyParagraphBlock = (): boolean => {
-    const selection = document.getSelection();
-    const element = selection?.focusNode?.parentElement;
-    return element instanceof HTMLElement
-        && isSiyuanBlock(element)
-        && element.dataset.type === "NodeParagraph"
-        && element.querySelector('[contenteditable="true"]')?.textContent.trim() === '';
-}
+// export const isEmptyParagraphBlock = (): boolean => {
+//     const selection = document.getSelection();
+//     const element = selection?.focusNode?.parentElement;
+//     return element instanceof HTMLElement
+//         && isSiyuanBlock(element)
+//         && element.dataset.type === "NodeParagraph"
+//         && element.querySelector('[contenteditable="true"]')?.textContent.trim() === '';
+// }
 
-export const isEmptyBlock = (): boolean => {
-    const selection = document.getSelection();
-    const element = selection?.focusNode?.parentElement;
-    return element instanceof HTMLElement
-        && isSiyuanBlock(element)
-        && element.querySelector('[contenteditable="true"]')?.textContent.trim() === '';
-}
+// export const isEmptyBlock = (): boolean => {
+//     const selection = document.getSelection();
+//     console.log("🚀 ~ isEmptyBlock ~ selection:", selection?.focusNode)
+//     const element = selection?.focusNode?.parentElement;
+//     return element instanceof HTMLElement
+//         && isSiyuanBlock(element)
+//         && element.querySelector('[contenteditable="true"]')?.textContent.trim() === '';
+// }
 
-export const isParagraphBlock = (): boolean => {
-    const selection = document.getSelection();
-    const element = selection?.focusNode?.parentElement;
-    return element instanceof HTMLElement
-        && isSiyuanBlock(element)
-        && element.dataset.type === "NodeParagraph";
-}
-
-export const isHTMLBlock = (): boolean => {
-    const selection = document.getSelection();
-    const element = selection?.focusNode?.parentElement;
-    return element instanceof HTMLElement
-        && isSiyuanBlock(element)
-        && element.dataset.type === "NodeHTMLBlock";
-}
 
 
 export const genHtmlBlock = (data: DOMStringMap): string => {
@@ -137,3 +158,55 @@ export const getAll = <ElementType extends HTMLElement>(
     selector: string,
     parent: ParentNode = document
 ): ElementType[] => Array.prototype.slice.call(parent.querySelectorAll<ElementType>(selector), 0);
+
+
+export const convertToOembed = async (element: HTMLElement, protyle: Protyle) => {
+        console.log("🚀 ~ OembedPlugin ~ convertToOembed= ~ detail:", element)
+        const doOperations: IOperation[] = [];
+        // blockElements.forEach(async (item: HTMLElement) => {
+        console.log("🚀 ~ OembedPlugin ~ detail.blockElements.forEach ~ item:", element)
+        console.log("🚀 ~ OembedPlugin ~ detail.blockElements.forEach ~ item.outerHTML:", element.outerHTML)
+        console.log("🚀 ~ OembedPlugin ~ detail.blockElements.forEach ~ item.index:", element.dataset.nodeIndex)
+        console.log("🚀 ~ OembedPlugin ~ detail.blockElements.forEach ~ item.updated:", element.getAttribute("updated"))
+        const editElement = element.querySelector('[contenteditable="true"]');
+        console.log("🚀 ~ OembedPlugin ~ detail.blockElements.forEach ~ editElement:", editElement)
+
+        if (editElement?.firstElementChild?.getAttribute("data-type") === "a" && editElement?.firstElementChild?.getAttribute("data-href")) {
+            const urlString = editElement.firstElementChild.getAttribute("data-href")
+
+            const html = await getOembed(urlString)
+            if (html) {
+                console.log("🚀 ~ OembedPlugin ~ detail.blockElements.forEach ~ html:", html)
+
+
+                console.log("🚀 ~ OembedPlugin ~ detail.blockElements.forEach ~ editElement:", editElement)
+
+                console.log("🚀 ~ OembedPlugin ~ detail.blockElements.forEach ~ textContent:", editElement.textContent)
+                console.log("🚀 ~ OembedPlugin ~ detail.blockElements.forEach ~ element:", element)
+                console.log("🚀 ~ OembedPlugin ~ detail.blockElements.forEach ~ element.outerHTML:", element.outerHTML)
+                console.log("🚀 ~ OembedPlugin ~ detail.blockElements.forEach ~ genHtmlBlock:", genHtmlBlock({
+                        id: element.dataset.nodeId,
+                        index: element.dataset.nodeIndex,
+                        updated: element.getAttribute("updated"),
+                        content: html
+                    }))
+                element.outerHTML = genHtmlBlock({
+                        id: element.dataset.nodeId,
+                        index: element.dataset.index,
+                        updated: element.dataset.updated,
+                        content: escapeHtml(html)
+                    });
+                // item.dataset.type = "NodeHTMLBlock";
+                // item.dataset.class = "render-node protyle-wysiwyg--select";
+                // item.dataset.subtype = "block"
+
+                doOperations.push({
+                    id: element.dataset.nodeId,
+                    data: element.outerHTML,
+                    action: "update"
+                });
+            }
+        }
+        // }
+        protyle.transaction(doOperations);
+    };
