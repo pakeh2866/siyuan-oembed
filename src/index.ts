@@ -24,9 +24,9 @@ import {
 } from "siyuan";
 import { hasClosestByAttribute } from "./utils/hasClosest";
 import { getOembed } from "./oembed";
-import { bookmarkAsString, convertToOembed, escapeHtml, genHtmlBlock, getAll, getCurrentBlock, isEmptyParagraphBlock, isHTMLBlock, isParagraphBlock, LinkData, microlinkScraper } from "@/utils/utils"
+import { addBookmark, bookmarkAsString, convertToOembed, escapeHtml, genHtmlBlock, getAll, getCurrentBlock, isEmptyParagraphBlock, isHTMLBlock, isParagraphBlock, LinkData, microlinkScraper, wrapInDiv } from "@/utils/utils"
 import "@/index.scss";
-import { insertBlock, updateBlock } from "@/api";
+import { getBlockByID, insertBlock, setBlockAttrs, updateBlock } from "@/api";
 
 import HelloExample from "@/hello.svelte";
 import SettingExample from "@/setting-example.svelte";
@@ -76,205 +76,213 @@ export default class OembedPlugin extends Plugin {
         console.log("🚀 ~ OembedPlugin ~ handleLink ~ detail:", detail);
     }
 
-    private generateCardHTML = async (config?: LinkData) => {
-        let conf: LinkData = {
-            title: "",
-            description: "",
-            icon: "",
-            author: "",
-            link: "",
-            thumbnail: "",
-            publisher: "",
-        };
-        if (config) {
-            Object.assign(conf, config);
-        }
-        try {
-            const url = await this.openDialog();
-            // const url = inputDialog({
-            //     title: "Oembed",
-            // });
-            // const url = this.showDialog();
-            // const url = "https://anarion.dev";
-            console.log("🚀 ~ OembedPlugin ~ generateCardHTML= ~ url:", url)
-            if (url) {
-                const newConf = await microlinkScraper(url);
-                const { title, image, description } = newConf;
-                return `<div
-    style="
-        border: 1px solid rgb(222, 222, 222);
-        box-shadow: rgba(0, 0, 0, 0.06) 0px 1px 3px;
-    "
-    ><style>
-    .kg-card {
-    font-family:
-        'Inter Variable',
-        ui-sans-serif,
-        system-ui,
-        -apple-system,
-        BlinkMacSystemFont,
-        Segoe UI,
-        Roboto,
-        Helvetica Neue,
-        Arial,
-        Noto Sans,
-        sans-serif,
-        Apple Color Emoji,
-        Segoe UI Emoji,
-        Segoe UI Symbol,
-        Noto Color Emoji;
-    }
-    .kg-card {
-        @extend %font-sans;
-    }
-    .kg-card:not(.kg-callout-card) {
-        font-size: 1rem;
-    }
-    /* Add extra margin before/after any cards,
-except for when immediately preceeded by a heading */
-    .post-body :not(.kg-card):not([id]) + .kg-card {
-        margin-top: 6vmin;
-    }
-    .post-body .kg-card + :not(.kg-card) {
-        margin-top: 6vmin;
-    }
-    .kg-bookmark-card,
-    .kg-bookmark-card * {
-        box-sizing: border-box;
-    }
-    .kg-bookmark-card,
-    .kg-bookmark-publisher {
-        position: relative;
-        /* width: 100%; */
-    }
-    .kg-bookmark-card a.kg-bookmark-container,
-    .kg-bookmark-card a.kg-bookmark-container:hover {
-        display: flex;
-        background: var(--bookmark-background-color);
-        text-decoration: none;
-        border-radius: 6px;
-        border: 1px solid var(--bookmark-border-color);
-        overflow: hidden;
-        color: var(--bookmark-text-color);
-    }
-    .kg-bookmark-content {
-        display: flex;
-        flex-direction: column;
-        flex-grow: 1;
-        flex-basis: 100%;
-        align-items: flex-start;
-        justify-content: flex-start;
-        padding: 20px;
-        overflow: hidden;
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell',
-            'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
-    }
-    .kg-bookmark-title {
-        font-size: 15px;
-        line-height: 1.4em;
-        font-weight: 600;
-    }
-    .kg-bookmark-description {
-        display: -webkit-box;
-        font-size: 14px;
-        line-height: 1.5em;
-        margin-top: 3px;
-        font-weight: 400;
-        max-height: 44px;
-        overflow-y: hidden;
-        opacity: 0.7;
-        -webkit-line-clamp: 2;
-        -webkit-box-orient: vertical;
-    }
-    .kg-bookmark-metadata {
-        display: flex;
-        align-items: center;
-        margin-top: 22px;
-        width: 100%;
-        font-size: 14px;
-        font-weight: 500;
-        white-space: nowrap;
-    }
-    .kg-bookmark-metadata > *:not(img) {
-        opacity: 0.7;
-    }
-    .kg-bookmark-icon {
-        width: 20px;
-        height: 20px;
-        margin-right: 6px;
-    }
-    .kg-bookmark-author,
-    .kg-bookmark-publisher {
-        display: inline;
-    }
-    .kg-bookmark-publisher {
-        text-overflow: ellipsis;
-        overflow: hidden;
-        max-width: 240px;
-        white-space: nowrap;
-        display: block;
-        line-height: 1.65em;
-    }
-    .kg-bookmark-metadata > span:nth-of-type(2) {
-        font-weight: 400;
-    }
-    .kg-bookmark-metadata > span:nth-of-type(2):before {
-        content: '•';
-        margin: 0 6px;
-    }
-    .kg-bookmark-metadata > span:last-of-type {
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-    .kg-bookmark-thumbnail {
-        position: relative;
-        flex-grow: 1;
-        min-width: 33%;
-    }
-    .kg-bookmark-thumbnail img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover; /* or contain */
-        position: absolute;
-        top: 0;
-        left: 0;
-        border-radius: 0 2px 2px 0;
-    }
-</style><div>
-            <figure class="kg-card kg-bookmark-card">
-                <a class="kg-bookmark-container" href="${conf.link}"
-                    ><div class="kg-bookmark-content">
-                        <div class="kg-bookmark-title">${
-                            conf.title || title
-                        }</div>
-                        <div class="kg-bookmark-description">${
-                            conf.description || description
-                        }</div>
-                        <div class="kg-bookmark-metadata">
-                            <img class="kg-bookmark-icon" src="${
-                                conf.icon
-                            }" alt="Link icon" />
-                            <span class="kg-bookmark-author">${
-                                conf.author
-                            }</span>
-                            <span class="kg-bookmark-publisher">${
-                                conf.publisher
-                            }</span>
-                        </div>
-                    </div><div class="kg-bookmark-thumbnail">
-                                <img src="${
-                                    conf.thumbnail || image
-                                }" alt="Link thumbnail" />
-                            </div>
-                </a>
-            </figure></div></div>
-            `;
-            }
-        } catch (e) {
-            console.error(e);
-            return;
-        }
-    };
+    // private addBookmark = async (config?: LinkData) => {
+    //     let conf: LinkData = {
+    //         title: "",
+    //         description: "",
+    //         icon: "",
+    //         author: "",
+    //         link: "",
+    //         thumbnail: "",
+    //         publisher: "",
+    //     };
+    //     if (config) {
+    //         Object.assign(conf, config);
+    //     }
+    //     try {
+    //         const link = await this.openDialog();
+    //         // const url = inputDialog({
+    //         //     title: "Oembed",
+    //         // });
+    //         // const url = this.showDialog();
+    //         // const url = "https://anarion.dev";
+    //         console.log("🚀 ~ OembedPlugin ~ generateCardHTML= ~ url:", link);
+    //         if (link) {
+    //             const newConf = await microlinkScraper(link);
+    //             const {
+    //                 url,
+    //                 title,
+    //                 image,
+    //                 logo,
+    //                 description,
+    //                 author,
+    //                 publisher,
+    //             } = newConf;
+    //             return `<div>
+    //                         <style>
+    //                             .kg-card {
+    //                                 font-family:
+    //                                     'Inter Variable',
+    //                                     ui-sans-serif,
+    //                                     system-ui,
+    //                                     -apple-system,
+    //                                     BlinkMacSystemFont,
+    //                                     Segoe UI,
+    //                                     Roboto,
+    //                                     Helvetica Neue,
+    //                                     Arial,
+    //                                     Noto Sans,
+    //                                     sans-serif,
+    //                                     Apple Color Emoji,
+    //                                     Segoe UI Emoji,
+    //                                     Segoe UI Symbol,
+    //                                     Noto Color Emoji;
+    //                                 font-size: 1rem;
+    //                             }
+    //                             .kg-card-main {
+    //                                 max-width: 800px;
+    //                                 margin: 0 auto;
+    //                                 display: flex;
+    //                                 justify-content: center;
+    //                             }
+    //                             .kg-bookmark-card,
+    //                             .kg-bookmark-card * {
+    //                                 box-sizing: border-box;
+    //                             }
+    //                             .kg-bookmark-card,
+    //                             .kg-bookmark-publisher {
+    //                                 position: relative;
+    //                                 /* width: 100%; */
+    //                             }
+    //                             .kg-bookmark-card a.kg-bookmark-container,
+    //                             .kg-bookmark-card a.kg-bookmark-container:hover {
+    //                                 display: flex;
+    //                                 background: var(--bookmark-background-color);
+    //                                 text-decoration: none;
+    //                                 border-radius: 6px;
+    //                                 border: 1px solid rgb(124 139 154 / 25%);
+    //                                 overflow: hidden;
+    //                                 color: var(--bookmark-text-color);
+    //                             }
+    //                             .kg-bookmark-content {
+    //                                 display: flex;
+    //                                 flex-direction: column;
+    //                                 flex-grow: 1;
+    //                                 flex-basis: 100%;
+    //                                 align-items: flex-start;
+    //                                 justify-content: flex-start;
+    //                                 padding: 20px;
+    //                                 overflow: hidden;
+    //                                 font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell',
+    //                                     'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+    //                             }
+    //                             .kg-bookmark-title {
+    //                                 font-size: 15px;
+    //                                 line-height: 1.4em;
+    //                                 font-weight: 600;
+    //                             }
+    //                             .kg-bookmark-description {
+    //                                 display: -webkit-box;
+    //                                 font-size: 14px;
+    //                                 line-height: 1.5em;
+    //                                 margin-top: 3px;
+    //                                 font-weight: 400;
+    //                                 max-height: 44px;
+    //                                 overflow-y: hidden;
+    //                                 opacity: 0.7;
+    //                             }
+    //                             .kg-bookmark-metadata {
+    //                                 display: flex;
+    //                                 align-items: center;
+    //                                 margin-top: 22px;
+    //                                 width: 100%;
+    //                                 font-size: 14px;
+    //                                 font-weight: 500;
+    //                                 white-space: nowrap;
+    //                             }
+    //                             .kg-bookmark-metadata>*:not(img) {
+    //                                 opacity: 0.7;
+    //                             }
+    //                             .kg-bookmark-icon {
+    //                                 width: 20px;
+    //                                 height: 20px;
+    //                                 margin-right: 6px;
+    //                             }
+    //                             .kg-bookmark-author,
+    //                             .kg-bookmark-publisher {
+    //                                 display: inline;
+    //                             }
+    //                             .kg-bookmark-publisher {
+    //                                 text-overflow: ellipsis;
+    //                                 overflow: hidden;
+    //                                 max-width: 240px;
+    //                                 white-space: nowrap;
+    //                                 display: block;
+    //                                 line-height: 1.65em;
+    //                             }
+    //                             .kg-bookmark-metadata>span:nth-of-type(2) {
+    //                                 font-weight: 400;
+    //                             }
+    //                             .kg-bookmark-metadata>span:nth-of-type(2):before {
+    //                                 content: '•';
+    //                                 margin: 0 6px;
+    //                             }
+    //                             .kg-bookmark-metadata>span:last-of-type {
+    //                                 overflow: hidden;
+    //                                 text-overflow: ellipsis;
+    //                             }
+    //                             .kg-bookmark-thumbnail {
+    //                                 position: relative;
+    //                                 flex-grow: 1;
+    //                                 min-width: 33%;
+    //                             }
+    //                             .kg-bookmark-thumbnail img {
+    //                                 /* width: 100%; */
+    //                                 height: 100%;
+    //                                 object-fit: contain;
+    //                                 /* or contain */
+    //                                 position: absolute;
+    //                                 top: 0;
+    //                                 left: 0;
+    //                                 border-radius: 0 2px 2px 0;
+    //                             }
+    //                             .w-full {
+    //                                 width: 100%;
+    //                             }
+    //                         </style>
+    //                         <main class="kg-card-main">
+    //                             <div class="w-full">
+    //                                 <div class="kg-card kg-bookmark-card">
+    //                                     <a class="kg-bookmark-container" href="${
+    //                                         conf.link || url
+    //                                     }"
+    //                                         ><div class="kg-bookmark-content">
+    //                                             <div class="kg-bookmark-title">${
+    //                                                 conf.title || title
+    //                                             }</div>
+    //                                             <div class="kg-bookmark-description">${
+    //                                                 conf.description ||
+    //                                                 description
+    //                                             }</div>
+    //                                             <div class="kg-bookmark-metadata">
+    //                                                 <img class="kg-bookmark-icon" src="${
+    //                                                     conf.icon || logo
+    //                                                 }" alt="Link icon" />
+    //                                                 <span class="kg-bookmark-author">${
+    //                                                     conf.author || author
+    //                                                 }</span>
+    //                                                 <span class="kg-bookmark-publisher">${
+    //                                                     conf.publisher ||
+    //                                                     publisher
+    //                                                 }</span>
+    //                                             </div>
+    //                                         </div>
+    //                                         <div class="kg-bookmark-thumbnail">
+    //                                             <img src="${
+    //                                                 conf.thumbnail || image
+    //                                             }" alt="Link thumbnail" />
+    //                                         </div>
+    //                                     </a>
+    //                                 </div>
+    //                             </div>
+    //                         </main>
+    //                     </div>`;
+    //         }
+    //     } catch (e) {
+    //         console.error(e);
+    //         return;
+    //     }
+    // };
 
     private openDialog = (args?: {
         title: string;
@@ -445,13 +453,33 @@ except for when immediately preceeded by a heading */
                     protyle.insert(window.Lute.Caret);
                     try {
                         const id = getCurrentBlock()?.dataset.nodeId;
+                        // console.log("🚀 ~ OembedPlugin ~ callback: ~ id:", id)
                         if (id) {
-                            const dom = await this.generateCardHTML();
-                            const res = await updateBlock("dom", dom, id);
-                            if (res) {
+                            const link = await this.openDialog();
+                            const dom = await addBookmark({
+                                link: link as string
+                            });
+                            // console.log("🚀 ~ OembedPlugin ~ callback: ~ dom:", dom)
+                            const resUpdate = await updateBlock("dom", dom, id);
+                            // const res = await updateBlock("dom", wrapInDiv(`&lt;blockquote class=&quot;twitter-tweet&quot; data-dnt=&quot;true&quot; data-theme=&quot;dark&quot;&gt;&lt;p lang=&quot;en&quot; dir=&quot;ltr&quot;&gt;Jaw-Dropping Rogan-Trump Interview Crushes Kamala Harris Campaign&lt;br&gt;&lt;br&gt;The full three-hour talk summarized in less than 10 minutes.&lt;br&gt;&lt;br&gt;🧵 THREAD &lt;a href=&quot;https://t.co/PbyZ5E5Kd6&quot;&gt;pic.twitter.com/PbyZ5E5Kd6&lt;/a&gt;&lt;/p&gt;&amp;mdash; The Vigilant Fox 🦊 (@VigilantFox) &lt;a href=&quot;https://twitter.com/VigilantFox/status/1850122021323116766?ref_src=twsrc%5Etfw&quot;&gt;October 26, 2024&lt;/a&gt;&lt;/blockquote&gt;&lt;script async src=&quot;https://platform.twitter.com/widgets.js&quot; charset=&quot;utf-8&quot;&gt;&lt;/script&gt;`), id);
+                            if (resUpdate) {
                                 console.log("Update block success");
                             } else {
-                                console.error("Update block failed:", res);
+                                console.error(
+                                    "Update block failed:",
+                                    resUpdate
+                                );
+                            }
+                            const resSet = setBlockAttrs(id, {
+                                "data-node-oembedOriginalUrl": link as string,
+                            });
+                            if (resSet) {
+                                console.log("Set block attributes success");
+                            } else {
+                                console.error(
+                                    "set block attributes failed:",
+                                    resSet
+                                );
                             }
                         }
                     } catch (error) {
@@ -470,28 +498,85 @@ except for when immediately preceeded by a heading */
                     hotkey: "⇧⌘L",
                     tipPosition: "n",
                     tip: this.i18n.toggleOembed,
-                    click: (protyle: Protyle) => {
+                    click: async () => {
+                        const block = getCurrentBlock();
+                        console.log(
+                            "🚀 ~ OembedPlugin ~ click: ~ block:",
+                            block
+                        );
+                        console.log(
+                            "🚀 ~ OembedPlugin ~ click: ~ blockId:",
+                            block?.dataset.nodeId
+                        );
+
+                        // check if the block is empty -> add oembed
+                        if (isEmptyParagraphBlock()) {
+                            try {
+                                // console.log("🚀 ~ OembedPlugin ~ click: ~ block:", block)
+                                const id = block?.dataset.nodeId;
+                                // console.log("🚀 ~ OembedPlugin ~ click: ~ id:", id)
+                                if (id) {
+                                    const link = await this.openDialog();
+                                    // console.log("🚀 ~ OembedPlugin ~ click: ~ link:", link)
+                                    convertToOembed(block, link as string);
+                                }
+                            } catch (error) {
+                                console.error(
+                                    "Error inserting oembed link",
+                                    error
+                                );
+                            }
+                        }
+                        else {
+                        // if it is not empty, check if contains a link
+                            try {
+                                convertToOembed(block);
+                            } catch (error) {
+                                console.error("Error inserting oembed link", error);
+                            }
+
+                        }
+                        // try {
+                        //     const id = getCurrentBlock()?.dataset.nodeId;
+                        //     if (id) {
+                        //         const dom = await this.addBookmark();
+                        //         const res = await updateBlock("dom", dom, id);
+                        //         if (res) {
+                        //             console.log("Update block success");
+                        //         } else {
+                        //             console.error("Update block failed:", res);
+                        //         }
+                        //     }
+                        // } catch (error) {
+                        //     console.error("Error calling updateBlock:", error);
+                        // }
                         // this.showDialog();
                         // protyle.insert("oembed");
-                        const test = getAll("div.p.protyle-wysiwyg--select");
-                        console.log("🚀 ~ OembedPlugin ~ onload ~ test:", test);
-                        console.log(
-                            "🚀 ~ OembedPlugin ~ callback ~ getCurrentBlock:",
-                            getCurrentBlock()
-                        );
-                        console.log(
-                            "🚀 ~ OembedPlugin ~ callback ~ isEmptyParagraphBlock:",
-                            isEmptyParagraphBlock()
-                        );
-                        console.log(
-                            "🚀 ~ OembedPlugin ~ callback ~ isParagraphBlock:",
-                            isParagraphBlock()
-                        );
-                        console.log(
-                            "🚀 ~ OembedPlugin ~ callback ~ isHTMLBlock:",
-                            isHTMLBlock()
-                        );
-                        convertToOembed(getCurrentBlock(), protyle);
+                        // const test = getAll("div.p.protyle-wysiwyg--select");
+                        // console.log("🚀 ~ OembedPlugin ~ onload ~ test:", test);
+                        // console.log(
+                        //     "🚀 ~ OembedPlugin ~ callback ~ getCurrentBlock:",
+                        //     getCurrentBlock()
+                        // );
+                        // const id = getCurrentBlock()?.dataset.nodeId;
+                        // console.log(
+                        //     "🚀 ~ OembedPlugin ~ callback ~ getBlockByID:",
+                        //     await getBlockByID(id)
+                        // );
+                        // console.log(
+                        //     "🚀 ~ OembedPlugin ~ callback ~ isEmptyParagraphBlock:",
+                        //     isEmptyParagraphBlock()
+                        // );
+                        // console.log(
+                        //     "🚀 ~ OembedPlugin ~ callback ~ isParagraphBlock:",
+                        //     isParagraphBlock()
+                        // );
+                        // console.log(
+                        //     "🚀 ~ OembedPlugin ~ callback ~ isHTMLBlock:",
+                        //     isHTMLBlock()
+                        // );
+                        // ;
+                        // convertToOembed(getCurrentBlock(), protyle);
                     },
                 },
             ],

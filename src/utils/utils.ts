@@ -1,15 +1,16 @@
 import getOembed from "@/oembed";
 import { IOperation, IProtyle, Protyle } from "siyuan";
 import { svelteDialog, inputDialog, inputDialogSync } from "@/libs/dialog";
+import { setBlockAttrs, updateBlock } from "@/api";
 
 export interface LinkData {
-    title: string;
-    description: string;
-    icon: string;
-    author: string;
+    title?: string;
+    description?: string;
+    icon?: string;
+    author?: string;
     link: string;
-    thumbnail: string;
-    publisher: string;
+    thumbnail?: string;
+    publisher?: string;
 }
 
 export const isExternal = (url: string) => {
@@ -171,56 +172,137 @@ export const getAll = <ElementType extends HTMLElement>(
 ): ElementType[] => Array.prototype.slice.call(parent.querySelectorAll<ElementType>(selector), 0);
 
 
-export const convertToOembed = async (element: HTMLElement, protyle: Protyle) => {
-        console.log("🚀 ~ OembedPlugin ~ convertToOembed= ~ detail:", element)
-        const doOperations: IOperation[] = [];
-        // blockElements.forEach(async (item: HTMLElement) => {
-        console.log("🚀 ~ OembedPlugin ~ detail.blockElements.forEach ~ item:", element)
-        console.log("🚀 ~ OembedPlugin ~ detail.blockElements.forEach ~ item.outerHTML:", element.outerHTML)
-        console.log("🚀 ~ OembedPlugin ~ detail.blockElements.forEach ~ item.index:", element.dataset.nodeIndex)
-        console.log("🚀 ~ OembedPlugin ~ detail.blockElements.forEach ~ item.updated:", element.getAttribute("updated"))
-        const editElement = element.querySelector('[contenteditable="true"]');
-        console.log("🚀 ~ OembedPlugin ~ detail.blockElements.forEach ~ editElement:", editElement)
+export const convertToOembed = async (block: HTMLElement, link?: string) => {
+    // console.log("🚀 ~ convertToOembed ~ link:", link)
+    // console.log("🚀 ~ convertToOembed ~ block:", block);
+    const id = block?.dataset.nodeId;
+    // console.log("🚀 ~ convertToOembed ~ id:", id)
+    let url: string = null;
 
+    // we have been given a link
+    if (link) {
+        url = link;
+    }
+    else {
+        const editElement = block.querySelector(
+            '[contenteditable="true"]'
+        );
         if (editElement?.firstElementChild?.getAttribute("data-type") === "a" && editElement?.firstElementChild?.getAttribute("data-href")) {
-            const urlString = editElement.firstElementChild.getAttribute("data-href")
-
-            const html = await getOembed(urlString)
-            if (html) {
-                console.log("🚀 ~ OembedPlugin ~ detail.blockElements.forEach ~ html:", html)
-
-
-                console.log("🚀 ~ OembedPlugin ~ detail.blockElements.forEach ~ editElement:", editElement)
-
-                console.log("🚀 ~ OembedPlugin ~ detail.blockElements.forEach ~ textContent:", editElement.textContent)
-                console.log("🚀 ~ OembedPlugin ~ detail.blockElements.forEach ~ element:", element)
-                console.log("🚀 ~ OembedPlugin ~ detail.blockElements.forEach ~ element.outerHTML:", element.outerHTML)
-                console.log("🚀 ~ OembedPlugin ~ detail.blockElements.forEach ~ genHtmlBlock:", genHtmlBlock({
-                        id: element.dataset.nodeId,
-                        index: element.dataset.nodeIndex,
-                        updated: element.getAttribute("updated"),
-                        content: html
-                    }))
-                element.outerHTML = genHtmlBlock({
-                        id: element.dataset.nodeId,
-                        index: element.dataset.index,
-                        updated: element.dataset.updated,
-                        content: escapeHtml(html)
-                    });
-                // item.dataset.type = "NodeHTMLBlock";
-                // item.dataset.class = "render-node protyle-wysiwyg--select";
-                // item.dataset.subtype = "block"
-
-                doOperations.push({
-                    id: element.dataset.nodeId,
-                    data: element.outerHTML,
-                    action: "update"
-                });
+            url = editElement.firstElementChild.getAttribute("data-href") ?? null
+        }
+    }
+    console.log("🚀 ~ convertToOembed ~ url:", url)
+    if (url) {
+        const html = await getOembed(url)
+        if (html) {
+            // console.log("🚀 ~ convertToOembed ~ html:", wrapInDiv(html));
+            const res = await updateBlock("dom", wrapInDiv(html), id);
+            setBlockAttrs(id, {
+                "data-node-oembedOriginalUrl": link as string,
+            });
+            // console.log("🚀 ~ convertToOembed ~ res:", res)
+            if (res) {
+                console.log("Update block success");
+            } else {
+                console.error(
+                    "Update block failed:",
+                    res
+                );
             }
         }
-        // }
-        protyle.transaction(doOperations);
-    };
+    }
+};
+
+
+// export const convertToOembed = async (
+//     element: HTMLElement,
+//     protyle: Protyle
+// ) => {
+//     console.log("🚀 ~ OembedPlugin ~ convertToOembed= ~ detail:", element);
+//     const doOperations: IOperation[] = [];
+//     // blockElements.forEach(async (item: HTMLElement) => {
+//     console.log(
+//         "🚀 ~ OembedPlugin ~ detail.blockElements.forEach ~ item:",
+//         element
+//     );
+//     console.log(
+//         "🚀 ~ OembedPlugin ~ detail.blockElements.forEach ~ item.outerHTML:",
+//         element.outerHTML
+//     );
+//     console.log(
+//         "🚀 ~ OembedPlugin ~ detail.blockElements.forEach ~ item.index:",
+//         element.dataset.nodeIndex
+//     );
+//     console.log(
+//         "🚀 ~ OembedPlugin ~ detail.blockElements.forEach ~ item.updated:",
+//         element.getAttribute("updated")
+//     );
+//     const editElement = element.querySelector('[contenteditable="true"]');
+//     console.log(
+//         "🚀 ~ OembedPlugin ~ detail.blockElements.forEach ~ editElement:",
+//         editElement
+//     );
+
+//     if (
+//         editElement?.firstElementChild?.getAttribute("data-type") === "a" &&
+//         editElement?.firstElementChild?.getAttribute("data-href")
+//     ) {
+//         const urlString =
+//             editElement.firstElementChild.getAttribute("data-href");
+
+//         const html = await getOembed(urlString);
+//         if (html) {
+//             console.log(
+//                 "🚀 ~ OembedPlugin ~ detail.blockElements.forEach ~ html:",
+//                 html
+//             );
+
+//             console.log(
+//                 "🚀 ~ OembedPlugin ~ detail.blockElements.forEach ~ editElement:",
+//                 editElement
+//             );
+
+//             console.log(
+//                 "🚀 ~ OembedPlugin ~ detail.blockElements.forEach ~ textContent:",
+//                 editElement.textContent
+//             );
+//             console.log(
+//                 "🚀 ~ OembedPlugin ~ detail.blockElements.forEach ~ element:",
+//                 element
+//             );
+//             console.log(
+//                 "🚀 ~ OembedPlugin ~ detail.blockElements.forEach ~ element.outerHTML:",
+//                 element.outerHTML
+//             );
+//             console.log(
+//                 "🚀 ~ OembedPlugin ~ detail.blockElements.forEach ~ genHtmlBlock:",
+//                 genHtmlBlock({
+//                     id: element.dataset.nodeId,
+//                     index: element.dataset.nodeIndex,
+//                     updated: element.getAttribute("updated"),
+//                     content: html,
+//                 })
+//             );
+//             element.outerHTML = genHtmlBlock({
+//                 id: element.dataset.nodeId,
+//                 index: element.dataset.index,
+//                 updated: element.dataset.updated,
+//                 content: escapeHtml(html),
+//             });
+//             // item.dataset.type = "NodeHTMLBlock";
+//             // item.dataset.class = "render-node protyle-wysiwyg--select";
+//             // item.dataset.subtype = "block"
+
+//             doOperations.push({
+//                 id: element.dataset.nodeId,
+//                 data: element.outerHTML,
+//                 action: "update",
+//             });
+//         }
+//     }
+//     // }
+//     protyle.transaction(doOperations);
+// };
 
 export const bookmarkAsString = (linkData: LinkData): string => {
   // const data: LinkData = await getURLMetadata(url);
@@ -398,7 +480,229 @@ export const microlinkScraper = async (url) => {
                 title: data.data.title,
                 description: data.data.description,
                 url: url,
-                image: data.data.logo ? data.data.logo.url : data.data.image ? data.data.image.url : '',
+                logo: data.data.logo
+                    ? data.data.logo.url
+                    : "",
+                image: data.data.image
+                    ? data.data.image.url
+                    : data.data.logo
+                    ? data.data.logo.url
+                    : "",
+                author: data.data.author,
+                publisher: data.data.publisher
             };
         });
     }
+
+export const wrapInDiv = (input: string): string => {
+    return `<div>${input}</div>`;
+};
+
+export const stripNewLines = (input: string): string => {
+    return input.replace(/\n/g, '');
+};
+
+export const addBookmark = async (config?: LinkData) => {
+        let conf: LinkData = {
+            title: "",
+            description: "",
+            icon: "",
+            author: "",
+            link: "",
+            thumbnail: "",
+            publisher: "",
+        };
+        if (config) {
+            Object.assign(conf, config);
+        }
+        try {
+            console.log(
+                "🚀 ~ OembedPlugin ~ addBookmark= ~ conf.link:",
+                conf.link
+            );
+            if (conf.link) {
+                const newConf = await microlinkScraper(conf.link);
+                const {
+                    url,
+                    title,
+                    image,
+                    logo,
+                    description,
+                    author,
+                    publisher,
+                } = newConf;
+                return `<div>
+                            <style>
+                                .kg-card {
+                                    font-family:
+                                        'Inter Variable',
+                                        ui-sans-serif,
+                                        system-ui,
+                                        -apple-system,
+                                        BlinkMacSystemFont,
+                                        Segoe UI,
+                                        Roboto,
+                                        Helvetica Neue,
+                                        Arial,
+                                        Noto Sans,
+                                        sans-serif,
+                                        Apple Color Emoji,
+                                        Segoe UI Emoji,
+                                        Segoe UI Symbol,
+                                        Noto Color Emoji;
+                                    font-size: 1rem;
+                                }
+                                .kg-card-main {
+                                    max-width: 800px;
+                                    margin: 0 auto;
+                                    display: flex;
+                                    justify-content: center;
+                                }
+                                .kg-bookmark-card,
+                                .kg-bookmark-card * {
+                                    box-sizing: border-box;
+                                }
+                                .kg-bookmark-card,
+                                .kg-bookmark-publisher {
+                                    position: relative;
+                                    /* width: 100%; */
+                                }
+                                .kg-bookmark-card a.kg-bookmark-container,
+                                .kg-bookmark-card a.kg-bookmark-container:hover {
+                                    display: flex;
+                                    background: var(--bookmark-background-color);
+                                    text-decoration: none;
+                                    border-radius: 6px;
+                                    border: 1px solid rgb(124 139 154 / 25%);
+                                    overflow: hidden;
+                                    color: var(--bookmark-text-color);
+                                }
+                                .kg-bookmark-content {
+                                    display: flex;
+                                    flex-direction: column;
+                                    flex-grow: 1;
+                                    flex-basis: 100%;
+                                    align-items: flex-start;
+                                    justify-content: flex-start;
+                                    padding: 20px;
+                                    overflow: hidden;
+                                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell',
+                                        'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+                                }
+                                .kg-bookmark-title {
+                                    font-size: 15px;
+                                    line-height: 1.4em;
+                                    font-weight: 600;
+                                }
+                                .kg-bookmark-description {
+                                    display: -webkit-box;
+                                    font-size: 14px;
+                                    line-height: 1.5em;
+                                    margin-top: 3px;
+                                    font-weight: 400;
+                                    max-height: 44px;
+                                    overflow-y: hidden;
+                                    opacity: 0.7;
+                                }
+                                .kg-bookmark-metadata {
+                                    display: flex;
+                                    align-items: center;
+                                    margin-top: 22px;
+                                    width: 100%;
+                                    font-size: 14px;
+                                    font-weight: 500;
+                                    white-space: nowrap;
+                                }
+                                .kg-bookmark-metadata>*:not(img) {
+                                    opacity: 0.7;
+                                }
+                                .kg-bookmark-icon {
+                                    width: 20px;
+                                    height: 20px;
+                                    margin-right: 6px;
+                                }
+                                .kg-bookmark-author,
+                                .kg-bookmark-publisher {
+                                    display: inline;
+                                }
+                                .kg-bookmark-publisher {
+                                    text-overflow: ellipsis;
+                                    overflow: hidden;
+                                    max-width: 240px;
+                                    white-space: nowrap;
+                                    display: block;
+                                    line-height: 1.65em;
+                                }
+                                .kg-bookmark-metadata>span:nth-of-type(2) {
+                                    font-weight: 400;
+                                }
+                                .kg-bookmark-metadata>span:nth-of-type(2):before {
+                                    content: '•';
+                                    margin: 0 6px;
+                                }
+                                .kg-bookmark-metadata>span:last-of-type {
+                                    overflow: hidden;
+                                    text-overflow: ellipsis;
+                                }
+                                .kg-bookmark-thumbnail {
+                                    position: relative;
+                                    flex-grow: 1;
+                                    min-width: 33%;
+                                }
+                                .kg-bookmark-thumbnail img {
+                                    /* width: 100%; */
+                                    height: 100%;
+                                    object-fit: contain;
+                                    /* or contain */
+                                    position: absolute;
+                                    top: 0;
+                                    left: 0;
+                                    border-radius: 0 2px 2px 0;
+                                }
+                                .w-full {
+                                    width: 100%;
+                                }
+                            </style>
+                            <main class="kg-card-main">
+                                <div class="w-full">
+                                    <div class="kg-card kg-bookmark-card">
+                                        <a class="kg-bookmark-container" href="${
+                                            conf.link || url
+                                        }"
+                                            ><div class="kg-bookmark-content">
+                                                <div class="kg-bookmark-title">${
+                                                    conf.title || title
+                                                }</div>
+                                                <div class="kg-bookmark-description">${
+                                                    conf.description ||
+                                                    description
+                                                }</div>
+                                                <div class="kg-bookmark-metadata">
+                                                    <img class="kg-bookmark-icon" src="${
+                                                        conf.icon || logo
+                                                    }" alt="Link icon" />
+                                                    <span class="kg-bookmark-author">${
+                                                        conf.author || author
+                                                    }</span>
+                                                    <span class="kg-bookmark-publisher">${
+                                                        conf.publisher ||
+                                                        publisher
+                                                    }</span>
+                                                </div>
+                                            </div>
+                                            <div class="kg-bookmark-thumbnail">
+                                                <img src="${
+                                                    conf.thumbnail || image
+                                                }" alt="Link thumbnail" />
+                                            </div>
+                                        </a>
+                                    </div>
+                                </div>
+                            </main>
+                        </div>`;
+            }
+        } catch (e) {
+            console.error(e);
+            return;
+        }
+    };
