@@ -10,6 +10,7 @@
     "confirmRemove": "Confirm to delete the data in ${name}?",
     "insertEmoji": "Insert Emoji",
     "toggleOembed": "Toggle Oembed Link",
+    "toggleBookmarkCard": "Toggle Bookmark Card",
     "removeSpace": "Remove Space",
     "convertOembed": "Convert to Oembed Link",
     "getTab": "Print out all opened custom tabs in the debugger",

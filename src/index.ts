@@ -42,6 +42,8 @@ import {
     setPlugin,
     openDialog,
     toggleOembed,
+    logSuccess,
+    logError,
 } from "@/utils/utils";
 import "@/index.scss";
 import { getBlockByID, insertBlock, setBlockAttrs, updateBlock } from "@/api";
@@ -189,7 +191,7 @@ export default class OembedPlugin extends Plugin {
             );
         }
 
-        let SlashCommandTemplates = {
+        const SlashCommandTemplates = {
             oembed: {
                 filter: ["oembed", "Oembed", "oe"],
                 icon: "iconOembed",
@@ -217,47 +219,90 @@ export default class OembedPlugin extends Plugin {
             }
         );
 
-        // this.protyleSlash = [
-        //     {
-        //         filter: ["oembed", "Oembed"],
-        //         html: `<div class="b3-list-item__first"><span class="b3-list-item__text">Oembed</span><span class="b3-list-item__meta">Convert URLs in your markdown to the embedded version of those URLs</span></div>`,
-        //         id: "oembed",
-        //         callback: handleBookmarkUpdate,
-        //     },
-        // ];
+        const ToolbarCommands = {
+            oembed: {
+                name: "insert-oembed",
+                icon: "iconOembed",
+                hotkey: "⇧⌘O",
+                tipPosition: "n",
+                tip: this.i18n.toggleOembed,
+                click: async () => {
+                    const block = getCurrentBlock();
+                    const id = block?.dataset.nodeId;
+                    let link = null;
+                    if (!block) return;
+
+                    try {
+                        if (isEmptyParagraphBlock()) {
+                            // For empty blocks, prompt for link URL
+                            link = (await openDialog()) as string;
+                        } else {
+                            // For blocks with content, try to convert existing link
+                            link = extractUrlFromBlock(block);
+                        }
+                        if (link) {
+                            await convertToOembed(id, link);
+                        }
+                    } catch (error) {
+                        console.error("Error converting to oembed:", error);
+                    }
+                },
+            },
+            bookmarkCard: {
+                name: "insert-bookmarkCard",
+                icon: "iconLink",
+                hotkey: "⇧⌘K",
+                tipPosition: "n",
+                tip: this.i18n.toggleBookmarkCard,
+                click: async () => {
+                    const block = getCurrentBlock();
+                    const id = block?.dataset.nodeId;
+                    let link = null;
+                    if (!block) return;
+
+                    try {
+                        if (isEmptyParagraphBlock()) {
+                            // For empty blocks, prompt for link URL
+                            link = (await openDialog()) as string;
+                        } else {
+                            // For blocks with content, try to convert existing link
+                            link = extractUrlFromBlock(block);
+                        }
+                        if (link) {
+                            const dom = await addBookmark({ link });
+                            const updateResult = await updateBlock(
+                                "dom",
+                                dom,
+                                id
+                            );
+                            if (!updateResult) {
+                                throw new Error("Failed to update block");
+                            }
+                            logSuccess("Block update");
+
+                            // Set block attributes
+                            const attributeResult = setBlockAttrs(id, {
+                                "data-node-oembedOriginalUrl": link as string,
+                            });
+
+                            if (attributeResult) {
+                                logSuccess("Block attributes update");
+                            } else {
+                                logError("Block attributes update", "failed");
+                            }
+                        }
+
+                    } catch (error) {
+                        console.error("Error converting to oembed:", error);
+                    }
+                },
+            },
+        };
 
         this.protyleOptions = {
             toolbar: [
                 ...builtinEditTools,
-                {
-                    name: "insert-oembed",
-                    icon: "iconOembed",
-                    hotkey: "⇧⌘L",
-                    tipPosition: "n",
-                    tip: this.i18n.toggleOembed,
-                    click: async () => {
-                        const block = getCurrentBlock();
-                        const id = block?.dataset.nodeId;
-                        let link = null;
-                        if (!block) return;
-
-                        try {
-                            if (isEmptyParagraphBlock()) {
-                                // For empty blocks, prompt for link URL
-                                link = (await openDialog()) as string;
-                            } else {
-                                // For blocks with content, try to convert existing link
-                                // Get URL either from block content
-                                link = extractUrlFromBlock(block);
-                            }
-                            if (link) {
-                                await convertToOembed(id, link);
-                            }
-                        } catch (error) {
-                            console.error("Error converting to oembed:", error);
-                        }
-                    },
-                },
+                ...Object.values(ToolbarCommands)
             ],
         };
     }
