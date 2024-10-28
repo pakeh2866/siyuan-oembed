@@ -1,4 +1,3 @@
-import CircularJSON from "circular-json";
 import {
     Plugin,
     showMessage,
@@ -24,7 +23,25 @@ import {
 } from "siyuan";
 import { hasClosestByAttribute } from "./utils/hasClosest";
 import { getOembed } from "./oembed";
-import { addBookmark, bookmarkAsString, convertToOembed, escapeHtml, genHtmlBlock, getAll, getCurrentBlock, isEmptyParagraphBlock, isHTMLBlock, isParagraphBlock, LinkData, microlinkScraper, wrapInDiv } from "@/utils/utils"
+import {
+    addBookmark,
+    bookmarkAsString,
+    convertToOembed,
+    escapeHtml,
+    genHtmlBlock,
+    getAll,
+    getCurrentBlock,
+    isEmptyParagraphBlock,
+    isHTMLBlock,
+    isParagraphBlock,
+    LinkData,
+    microlinkScraper,
+    wrapInDiv,
+    extractUrlFromBlock,
+    handleBookmarkUpdate,
+    setPlugin,
+    openDialog,
+} from "@/utils/utils";
 import "@/index.scss";
 import { getBlockByID, insertBlock, setBlockAttrs, updateBlock } from "@/api";
 
@@ -63,6 +80,9 @@ export default class OembedPlugin extends Plugin {
     private isMobile: boolean;
     private blockIconEventBindThis = this.blockIconEvent.bind(this);
     private settingUtils: SettingUtils;
+    init() {
+        setPlugin(this);
+    }
 
     private handlePaste({ detail }: any) {
         console.log("🚀 ~ OembedPlugin ~ handlePaste ~ detail:", detail);
@@ -76,284 +96,7 @@ export default class OembedPlugin extends Plugin {
         console.log("🚀 ~ OembedPlugin ~ handleLink ~ detail:", detail);
     }
 
-    // private addBookmark = async (config?: LinkData) => {
-    //     let conf: LinkData = {
-    //         title: "",
-    //         description: "",
-    //         icon: "",
-    //         author: "",
-    //         link: "",
-    //         thumbnail: "",
-    //         publisher: "",
-    //     };
-    //     if (config) {
-    //         Object.assign(conf, config);
-    //     }
-    //     try {
-    //         const link = await this.openDialog();
-    //         // const url = inputDialog({
-    //         //     title: "Oembed",
-    //         // });
-    //         // const url = this.showDialog();
-    //         // const url = "https://anarion.dev";
-    //         console.log("🚀 ~ OembedPlugin ~ generateCardHTML= ~ url:", link);
-    //         if (link) {
-    //             const newConf = await microlinkScraper(link);
-    //             const {
-    //                 url,
-    //                 title,
-    //                 image,
-    //                 logo,
-    //                 description,
-    //                 author,
-    //                 publisher,
-    //             } = newConf;
-    //             return `<div>
-    //                         <style>
-    //                             .kg-card {
-    //                                 font-family:
-    //                                     'Inter Variable',
-    //                                     ui-sans-serif,
-    //                                     system-ui,
-    //                                     -apple-system,
-    //                                     BlinkMacSystemFont,
-    //                                     Segoe UI,
-    //                                     Roboto,
-    //                                     Helvetica Neue,
-    //                                     Arial,
-    //                                     Noto Sans,
-    //                                     sans-serif,
-    //                                     Apple Color Emoji,
-    //                                     Segoe UI Emoji,
-    //                                     Segoe UI Symbol,
-    //                                     Noto Color Emoji;
-    //                                 font-size: 1rem;
-    //                             }
-    //                             .kg-card-main {
-    //                                 max-width: 800px;
-    //                                 margin: 0 auto;
-    //                                 display: flex;
-    //                                 justify-content: center;
-    //                             }
-    //                             .kg-bookmark-card,
-    //                             .kg-bookmark-card * {
-    //                                 box-sizing: border-box;
-    //                             }
-    //                             .kg-bookmark-card,
-    //                             .kg-bookmark-publisher {
-    //                                 position: relative;
-    //                                 /* width: 100%; */
-    //                             }
-    //                             .kg-bookmark-card a.kg-bookmark-container,
-    //                             .kg-bookmark-card a.kg-bookmark-container:hover {
-    //                                 display: flex;
-    //                                 background: var(--bookmark-background-color);
-    //                                 text-decoration: none;
-    //                                 border-radius: 6px;
-    //                                 border: 1px solid rgb(124 139 154 / 25%);
-    //                                 overflow: hidden;
-    //                                 color: var(--bookmark-text-color);
-    //                             }
-    //                             .kg-bookmark-content {
-    //                                 display: flex;
-    //                                 flex-direction: column;
-    //                                 flex-grow: 1;
-    //                                 flex-basis: 100%;
-    //                                 align-items: flex-start;
-    //                                 justify-content: flex-start;
-    //                                 padding: 20px;
-    //                                 overflow: hidden;
-    //                                 font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell',
-    //                                     'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
-    //                             }
-    //                             .kg-bookmark-title {
-    //                                 font-size: 15px;
-    //                                 line-height: 1.4em;
-    //                                 font-weight: 600;
-    //                             }
-    //                             .kg-bookmark-description {
-    //                                 display: -webkit-box;
-    //                                 font-size: 14px;
-    //                                 line-height: 1.5em;
-    //                                 margin-top: 3px;
-    //                                 font-weight: 400;
-    //                                 max-height: 44px;
-    //                                 overflow-y: hidden;
-    //                                 opacity: 0.7;
-    //                             }
-    //                             .kg-bookmark-metadata {
-    //                                 display: flex;
-    //                                 align-items: center;
-    //                                 margin-top: 22px;
-    //                                 width: 100%;
-    //                                 font-size: 14px;
-    //                                 font-weight: 500;
-    //                                 white-space: nowrap;
-    //                             }
-    //                             .kg-bookmark-metadata>*:not(img) {
-    //                                 opacity: 0.7;
-    //                             }
-    //                             .kg-bookmark-icon {
-    //                                 width: 20px;
-    //                                 height: 20px;
-    //                                 margin-right: 6px;
-    //                             }
-    //                             .kg-bookmark-author,
-    //                             .kg-bookmark-publisher {
-    //                                 display: inline;
-    //                             }
-    //                             .kg-bookmark-publisher {
-    //                                 text-overflow: ellipsis;
-    //                                 overflow: hidden;
-    //                                 max-width: 240px;
-    //                                 white-space: nowrap;
-    //                                 display: block;
-    //                                 line-height: 1.65em;
-    //                             }
-    //                             .kg-bookmark-metadata>span:nth-of-type(2) {
-    //                                 font-weight: 400;
-    //                             }
-    //                             .kg-bookmark-metadata>span:nth-of-type(2):before {
-    //                                 content: '•';
-    //                                 margin: 0 6px;
-    //                             }
-    //                             .kg-bookmark-metadata>span:last-of-type {
-    //                                 overflow: hidden;
-    //                                 text-overflow: ellipsis;
-    //                             }
-    //                             .kg-bookmark-thumbnail {
-    //                                 position: relative;
-    //                                 flex-grow: 1;
-    //                                 min-width: 33%;
-    //                             }
-    //                             .kg-bookmark-thumbnail img {
-    //                                 /* width: 100%; */
-    //                                 height: 100%;
-    //                                 object-fit: contain;
-    //                                 /* or contain */
-    //                                 position: absolute;
-    //                                 top: 0;
-    //                                 left: 0;
-    //                                 border-radius: 0 2px 2px 0;
-    //                             }
-    //                             .w-full {
-    //                                 width: 100%;
-    //                             }
-    //                         </style>
-    //                         <main class="kg-card-main">
-    //                             <div class="w-full">
-    //                                 <div class="kg-card kg-bookmark-card">
-    //                                     <a class="kg-bookmark-container" href="${
-    //                                         conf.link || url
-    //                                     }"
-    //                                         ><div class="kg-bookmark-content">
-    //                                             <div class="kg-bookmark-title">${
-    //                                                 conf.title || title
-    //                                             }</div>
-    //                                             <div class="kg-bookmark-description">${
-    //                                                 conf.description ||
-    //                                                 description
-    //                                             }</div>
-    //                                             <div class="kg-bookmark-metadata">
-    //                                                 <img class="kg-bookmark-icon" src="${
-    //                                                     conf.icon || logo
-    //                                                 }" alt="Link icon" />
-    //                                                 <span class="kg-bookmark-author">${
-    //                                                     conf.author || author
-    //                                                 }</span>
-    //                                                 <span class="kg-bookmark-publisher">${
-    //                                                     conf.publisher ||
-    //                                                     publisher
-    //                                                 }</span>
-    //                                             </div>
-    //                                         </div>
-    //                                         <div class="kg-bookmark-thumbnail">
-    //                                             <img src="${
-    //                                                 conf.thumbnail || image
-    //                                             }" alt="Link thumbnail" />
-    //                                         </div>
-    //                                     </a>
-    //                                 </div>
-    //                             </div>
-    //                         </main>
-    //                     </div>`;
-    //         }
-    //     } catch (e) {
-    //         console.error(e);
-    //         return;
-    //     }
-    // };
-
-    private openDialog = (args?: {
-        title: string;
-        placeholder?: string;
-        defaultText?: string;
-        confirm?: (text: string) => void;
-        cancel?: () => void;
-        width?: string;
-        height?: string;
-    }) => {
-        return new Promise((resolve, reject) => {
-            const dialog = new Dialog({
-                title: this.i18n.insertURLDialogTitle,
-                content: `<div class="b3-dialog__content"><textarea class="b3-text-field fn__block" placeholder="Please enter the URL"></textarea></div>
-                    <div class="b3-dialog__action">
-                    <button class="b3-button b3-button--cancel">${this.i18n.cancel}</button><div class="fn__space"></div>
-                    <button class="b3-button b3-button--text">${this.i18n.save}</button>
-                    </div>`,
-                width: "520px",
-            });
-            const inputElement = dialog.element.querySelector("textarea");
-            const btnsElement = dialog.element.querySelectorAll(".b3-button");
-            dialog.bindInput(inputElement, () => {
-                (btnsElement[1] as HTMLElement).click();
-            });
-            inputElement.focus();
-            btnsElement[0].addEventListener("click", () => {
-                dialog.destroy();
-                reject();
-            });
-            btnsElement[1].addEventListener("click", () => {
-                dialog.destroy();
-                resolve(inputElement.value);
-            });
-            // const target: HTMLTextAreaElement = dialog.element.querySelector(
-            //     ".b3-dialog__content>textarea"
-            // );
-            // console.log("🚀 ~ OembedPlugin ~ returnnewPromise ~ target:", target)
-            // const btnsElement = dialog.element.querySelectorAll(".b3-button");
-            // btnsElement[0].addEventListener("click", () => {
-            //     if (args?.cancel) {
-            //         args.cancel();
-            //     }
-            //     dialog.destroy();
-            //     reject();
-            // });
-            // btnsElement[1].addEventListener("click", () => {
-            //     if (args?.confirm) {
-            //         args.confirm(target.value);
-            //     }
-            //     dialog.destroy();
-            //     resolve(target.value);
-            // });
-        });
-    };
-
     private showDialog() {
-        // let dialog = new Dialog({
-        //     title: `SiYuan ${Constants.SIYUAN_VERSION}`,
-        //     content: `<div id="helloPanel" class="b3-dialog__content"></div>`,
-        //     width: this.isMobile ? "92vw" : "720px",
-        //     destroyCallback() {
-        //         // hello.$destroy();
-        //     },
-        // });
-        // new HelloExample({
-        //     target: dialog.element.querySelector("#helloPanel"),
-        //     props: {
-        //         app: this.app,
-        //     }
-        // });
         svelteDialog({
             title: `SiYuan ${Constants.SIYUAN_VERSION}`,
             width: this.isMobile ? "92vw" : "720px",
@@ -369,6 +112,7 @@ export default class OembedPlugin extends Plugin {
     }
 
     async onload() {
+        this.init();
         this.data[STORAGE_NAME] = { readonlyText: "Readonly" };
 
         console.log("loading oembed plugin", this.i18n);
@@ -449,43 +193,7 @@ export default class OembedPlugin extends Plugin {
                 filter: ["oembed", "Oembed"],
                 html: `<div class="b3-list-item__first"><span class="b3-list-item__text">Oembed</span><span class="b3-list-item__meta">Convert URLs in your markdown to the embedded version of those URLs</span></div>`,
                 id: "oembed",
-                callback: async (protyle: Protyle) => {
-                    protyle.insert(window.Lute.Caret);
-                    try {
-                        const id = getCurrentBlock()?.dataset.nodeId;
-                        // console.log("🚀 ~ OembedPlugin ~ callback: ~ id:", id)
-                        if (id) {
-                            const link = await this.openDialog();
-                            const dom = await addBookmark({
-                                link: link as string
-                            });
-                            // console.log("🚀 ~ OembedPlugin ~ callback: ~ dom:", dom)
-                            const resUpdate = await updateBlock("dom", dom, id);
-                            // const res = await updateBlock("dom", wrapInDiv(`&lt;blockquote class=&quot;twitter-tweet&quot; data-dnt=&quot;true&quot; data-theme=&quot;dark&quot;&gt;&lt;p lang=&quot;en&quot; dir=&quot;ltr&quot;&gt;Jaw-Dropping Rogan-Trump Interview Crushes Kamala Harris Campaign&lt;br&gt;&lt;br&gt;The full three-hour talk summarized in less than 10 minutes.&lt;br&gt;&lt;br&gt;🧵 THREAD &lt;a href=&quot;https://t.co/PbyZ5E5Kd6&quot;&gt;pic.twitter.com/PbyZ5E5Kd6&lt;/a&gt;&lt;/p&gt;&amp;mdash; The Vigilant Fox 🦊 (@VigilantFox) &lt;a href=&quot;https://twitter.com/VigilantFox/status/1850122021323116766?ref_src=twsrc%5Etfw&quot;&gt;October 26, 2024&lt;/a&gt;&lt;/blockquote&gt;&lt;script async src=&quot;https://platform.twitter.com/widgets.js&quot; charset=&quot;utf-8&quot;&gt;&lt;/script&gt;`), id);
-                            if (resUpdate) {
-                                console.log("Update block success");
-                            } else {
-                                console.error(
-                                    "Update block failed:",
-                                    resUpdate
-                                );
-                            }
-                            const resSet = setBlockAttrs(id, {
-                                "data-node-oembedOriginalUrl": link as string,
-                            });
-                            if (resSet) {
-                                console.log("Set block attributes success");
-                            } else {
-                                console.error(
-                                    "set block attributes failed:",
-                                    resSet
-                                );
-                            }
-                        }
-                    } catch (error) {
-                        console.error("Error calling updateBlock:", error);
-                    }
-                },
+                callback: handleBookmarkUpdate,
             },
         ];
 
@@ -500,89 +208,29 @@ export default class OembedPlugin extends Plugin {
                     tip: this.i18n.toggleOembed,
                     click: async () => {
                         const block = getCurrentBlock();
-                        console.log(
-                            "🚀 ~ OembedPlugin ~ click: ~ block:",
-                            block
-                        );
-                        console.log(
-                            "🚀 ~ OembedPlugin ~ click: ~ blockId:",
-                            block?.dataset.nodeId
-                        );
+                        const id = block?.dataset.nodeId;
+                        let link = null;
+                        if (!block) return;
 
-                        // check if the block is empty -> add oembed
-                        if (isEmptyParagraphBlock()) {
-                            try {
-                                // console.log("🚀 ~ OembedPlugin ~ click: ~ block:", block)
-                                const id = block?.dataset.nodeId;
-                                // console.log("🚀 ~ OembedPlugin ~ click: ~ id:", id)
-                                if (id) {
-                                    const link = await this.openDialog();
-                                    // console.log("🚀 ~ OembedPlugin ~ click: ~ link:", link)
-                                    convertToOembed(block, link as string);
-                                }
-                            } catch (error) {
-                                console.error(
-                                    "Error inserting oembed link",
-                                    error
-                                );
+                        try {
+                            if (isEmptyParagraphBlock()) {
+                                // For empty blocks, prompt for link URL
+                                link = (await openDialog()) as string;
+                            } else {
+                                // For blocks with content, try to convert existing link
+                                // Get URL either from block content
+                                link = extractUrlFromBlock(block);
                             }
-                        }
-                        else {
-                        // if it is not empty, check if contains a link
-                            try {
-                                convertToOembed(block);
-                            } catch (error) {
-                                console.error("Error inserting oembed link", error);
+                            if (link) {
+                                await convertToOembed(id, link);
                             }
-
+                        } catch (error) {
+                            console.error("Error converting to oembed:", error);
                         }
-                        // try {
-                        //     const id = getCurrentBlock()?.dataset.nodeId;
-                        //     if (id) {
-                        //         const dom = await this.addBookmark();
-                        //         const res = await updateBlock("dom", dom, id);
-                        //         if (res) {
-                        //             console.log("Update block success");
-                        //         } else {
-                        //             console.error("Update block failed:", res);
-                        //         }
-                        //     }
-                        // } catch (error) {
-                        //     console.error("Error calling updateBlock:", error);
-                        // }
-                        // this.showDialog();
-                        // protyle.insert("oembed");
-                        // const test = getAll("div.p.protyle-wysiwyg--select");
-                        // console.log("🚀 ~ OembedPlugin ~ onload ~ test:", test);
-                        // console.log(
-                        //     "🚀 ~ OembedPlugin ~ callback ~ getCurrentBlock:",
-                        //     getCurrentBlock()
-                        // );
-                        // const id = getCurrentBlock()?.dataset.nodeId;
-                        // console.log(
-                        //     "🚀 ~ OembedPlugin ~ callback ~ getBlockByID:",
-                        //     await getBlockByID(id)
-                        // );
-                        // console.log(
-                        //     "🚀 ~ OembedPlugin ~ callback ~ isEmptyParagraphBlock:",
-                        //     isEmptyParagraphBlock()
-                        // );
-                        // console.log(
-                        //     "🚀 ~ OembedPlugin ~ callback ~ isParagraphBlock:",
-                        //     isParagraphBlock()
-                        // );
-                        // console.log(
-                        //     "🚀 ~ OembedPlugin ~ callback ~ isHTMLBlock:",
-                        //     isHTMLBlock()
-                        // );
-                        // ;
-                        // convertToOembed(getCurrentBlock(), protyle);
                     },
                 },
             ],
         };
-
-        console.log(this.i18n.helloPlugin);
     }
 
     // handlePaste(arg0: string, handlePaste: any) {
@@ -640,15 +288,20 @@ export default class OembedPlugin extends Plugin {
                     "🚀 ~ OembedPlugin ~ click ~ detail:",
                     detail.blockElements
                 );
-                const promises = detail.blockElements.map(
-                    async (item: HTMLElement) => {
-                        await convertToOembed(
-                            item,
-                            detail.protyle.getInstance()
-                        );
-                    }
-                );
-                // Promise.all(promises).then(() => {
+                try {
+                    const promises = detail.blockElements.map(
+                        async (item: HTMLElement) => {
+                            const id = item?.dataset.nodeId
+                            const link = extractUrlFromBlock(item);
+                            if (link) {
+                                await convertToOembed(id, link);
+                            }
+                        }
+                    );
+                } catch (error) {
+                    console.error("Error converting to oembed:", error);
+                }
+1                // Promise.all(promises).then(() => {
                 //     detail.protyle.getInstance().reload()
                 // });
             },

@@ -1,7 +1,13 @@
 import getOembed from "@/oembed";
-import { IOperation, IProtyle, Protyle } from "siyuan";
+import { Dialog, IOperation, IProtyle, Protyle } from "siyuan";
 import { svelteDialog, inputDialog, inputDialogSync } from "@/libs/dialog";
 import { setBlockAttrs, updateBlock } from "@/api";
+import OembedPlugin from "../.";
+
+export let plugin: OembedPlugin;
+export function setPlugin(_plugin: any) {
+    plugin = _plugin;
+}
 
 export interface LinkData {
     title?: string;
@@ -171,138 +177,43 @@ export const getAll = <ElementType extends HTMLElement>(
     parent: ParentNode = document
 ): ElementType[] => Array.prototype.slice.call(parent.querySelectorAll<ElementType>(selector), 0);
 
+interface BlockAttributes {
+    "data-node-oembedOriginalUrl": string;
+}
 
-export const convertToOembed = async (block: HTMLElement, link?: string) => {
-    // console.log("🚀 ~ convertToOembed ~ link:", link)
-    // console.log("🚀 ~ convertToOembed ~ block:", block);
-    const id = block?.dataset.nodeId;
-    // console.log("🚀 ~ convertToOembed ~ id:", id)
-    let url: string = null;
+export const convertToOembed = async (id: string, link: string): Promise<void> => {
+    if (!id || !link) return;
 
-    // we have been given a link
-    if (link) {
-        url = link;
-    }
-    else {
-        const editElement = block.querySelector(
-            '[contenteditable="true"]'
-        );
-        if (editElement?.firstElementChild?.getAttribute("data-type") === "a" && editElement?.firstElementChild?.getAttribute("data-href")) {
-            url = editElement.firstElementChild.getAttribute("data-href") ?? null
-        }
-    }
-    console.log("🚀 ~ convertToOembed ~ url:", url)
-    if (url) {
-        const html = await getOembed(url)
-        if (html) {
-            // console.log("🚀 ~ convertToOembed ~ html:", wrapInDiv(html));
-            const res = await updateBlock("dom", wrapInDiv(html), id);
-            setBlockAttrs(id, {
-                "data-node-oembedOriginalUrl": link as string,
+    try {
+        const html = await getOembed(link);
+        if (!html) return;
+
+        const wrappedHtml = wrapInDiv(html);
+        const success = await updateBlock("dom", wrappedHtml, id);
+
+        if (success) {
+            await setBlockAttrs(id, {
+                "data-node-oembedOriginalUrl": link
             });
-            // console.log("🚀 ~ convertToOembed ~ res:", res)
-            if (res) {
-                console.log("Update block success");
-            } else {
-                console.error(
-                    "Update block failed:",
-                    res
-                );
-            }
+            console.log("Block successfully updated with oembed content");
         }
+    } catch (error) {
+        console.error("Failed to convert block to oembed:", error);
+        throw error; // Re-throw to allow caller to handle the error
     }
 };
 
+export const extractUrlFromBlock = (block: HTMLElement): string | null => {
+    const editElement = block.querySelector<HTMLElement>('[contenteditable="true"]');
+    if (!editElement) return null;
 
-// export const convertToOembed = async (
-//     element: HTMLElement,
-//     protyle: Protyle
-// ) => {
-//     console.log("🚀 ~ OembedPlugin ~ convertToOembed= ~ detail:", element);
-//     const doOperations: IOperation[] = [];
-//     // blockElements.forEach(async (item: HTMLElement) => {
-//     console.log(
-//         "🚀 ~ OembedPlugin ~ detail.blockElements.forEach ~ item:",
-//         element
-//     );
-//     console.log(
-//         "🚀 ~ OembedPlugin ~ detail.blockElements.forEach ~ item.outerHTML:",
-//         element.outerHTML
-//     );
-//     console.log(
-//         "🚀 ~ OembedPlugin ~ detail.blockElements.forEach ~ item.index:",
-//         element.dataset.nodeIndex
-//     );
-//     console.log(
-//         "🚀 ~ OembedPlugin ~ detail.blockElements.forEach ~ item.updated:",
-//         element.getAttribute("updated")
-//     );
-//     const editElement = element.querySelector('[contenteditable="true"]');
-//     console.log(
-//         "🚀 ~ OembedPlugin ~ detail.blockElements.forEach ~ editElement:",
-//         editElement
-//     );
+    const linkElement = editElement.firstElementChild;
+    if (!linkElement) return null;
 
-//     if (
-//         editElement?.firstElementChild?.getAttribute("data-type") === "a" &&
-//         editElement?.firstElementChild?.getAttribute("data-href")
-//     ) {
-//         const urlString =
-//             editElement.firstElementChild.getAttribute("data-href");
-
-//         const html = await getOembed(urlString);
-//         if (html) {
-//             console.log(
-//                 "🚀 ~ OembedPlugin ~ detail.blockElements.forEach ~ html:",
-//                 html
-//             );
-
-//             console.log(
-//                 "🚀 ~ OembedPlugin ~ detail.blockElements.forEach ~ editElement:",
-//                 editElement
-//             );
-
-//             console.log(
-//                 "🚀 ~ OembedPlugin ~ detail.blockElements.forEach ~ textContent:",
-//                 editElement.textContent
-//             );
-//             console.log(
-//                 "🚀 ~ OembedPlugin ~ detail.blockElements.forEach ~ element:",
-//                 element
-//             );
-//             console.log(
-//                 "🚀 ~ OembedPlugin ~ detail.blockElements.forEach ~ element.outerHTML:",
-//                 element.outerHTML
-//             );
-//             console.log(
-//                 "🚀 ~ OembedPlugin ~ detail.blockElements.forEach ~ genHtmlBlock:",
-//                 genHtmlBlock({
-//                     id: element.dataset.nodeId,
-//                     index: element.dataset.nodeIndex,
-//                     updated: element.getAttribute("updated"),
-//                     content: html,
-//                 })
-//             );
-//             element.outerHTML = genHtmlBlock({
-//                 id: element.dataset.nodeId,
-//                 index: element.dataset.index,
-//                 updated: element.dataset.updated,
-//                 content: escapeHtml(html),
-//             });
-//             // item.dataset.type = "NodeHTMLBlock";
-//             // item.dataset.class = "render-node protyle-wysiwyg--select";
-//             // item.dataset.subtype = "block"
-
-//             doOperations.push({
-//                 id: element.dataset.nodeId,
-//                 data: element.outerHTML,
-//                 action: "update",
-//             });
-//         }
-//     }
-//     // }
-//     protyle.transaction(doOperations);
-// };
+    return linkElement.getAttribute("data-type") === "a"
+        ? linkElement.getAttribute("data-href")
+        : null;
+};
 
 export const bookmarkAsString = (linkData: LinkData): string => {
   // const data: LinkData = await getURLMetadata(url);
@@ -516,10 +427,6 @@ export const addBookmark = async (config?: LinkData) => {
             Object.assign(conf, config);
         }
         try {
-            console.log(
-                "🚀 ~ OembedPlugin ~ addBookmark= ~ conf.link:",
-                conf.link
-            );
             if (conf.link) {
                 const newConf = await microlinkScraper(conf.link);
                 const {
@@ -706,3 +613,90 @@ export const addBookmark = async (config?: LinkData) => {
             return;
         }
     };
+
+
+export const openDialog = (args?: {
+        title: string;
+        placeholder?: string;
+        defaultText?: string;
+        confirm?: (text: string) => void;
+        cancel?: () => void;
+        width?: string;
+        height?: string;
+    }) => {
+        return new Promise((resolve, reject) => {
+            const dialog = new Dialog({
+                title: plugin.i18n.insertURLDialogTitle,
+                content: `<div class="b3-dialog__content"><textarea class="b3-text-field fn__block" placeholder="Please enter the URL"></textarea></div>
+                    <div class="b3-dialog__action">
+                    <button class="b3-button b3-button--cancel">${plugin.i18n.cancel}</button><div class="fn__space"></div>
+                    <button class="b3-button b3-button--text">${plugin.i18n.save}</button>
+                    </div>`,
+                width: "520px",
+            });
+            const inputElement = dialog.element.querySelector("textarea");
+            const btnsElement = dialog.element.querySelectorAll(".b3-button");
+            dialog.bindInput(inputElement, () => {
+                (btnsElement[1] as HTMLElement).click();
+            });
+            inputElement.focus();
+            btnsElement[0].addEventListener("click", () => {
+                dialog.destroy();
+                reject();
+            });
+            btnsElement[1].addEventListener("click", () => {
+                dialog.destroy();
+                resolve(inputElement.value);
+            });
+        });
+    };
+
+export const logSuccess = (operation: string) =>
+    console.log(`${operation} completed successfully`);
+
+export const logError = (operation: string, error: unknown) =>
+    console.error(`Error during ${operation}:`, error);
+
+// Main callback function
+export const handleBookmarkUpdate = async (protyle: Protyle): Promise<void> => {
+    protyle.insert(window.Lute.Caret);
+
+    const currentBlock = getCurrentBlock();
+
+    if (!currentBlock?.dataset.nodeId) {
+        throw new Error("No valid block ID found");
+    }
+
+    try {
+        const blockId = currentBlock.dataset.nodeId;
+        const link = await openDialog() as string;
+
+        if (!link) {
+            throw new Error("No link provided");
+        }
+
+        // Update block DOM
+        const dom = await addBookmark({ link });
+        const updateResult = await updateBlock("dom", dom, blockId);
+
+        if (!updateResult) {
+            throw new Error("Failed to update block");
+        }
+        logSuccess("Block update");
+
+        // Set block attributes
+        const attributeResult = setBlockAttrs(blockId, {
+            "data-node-oembedOriginalUrl": link as string,
+        });
+
+        if (attributeResult) {
+            logSuccess("Block attributes update");
+        } else {
+            logError("Block attributes update", "failed")
+        }
+
+    } catch (error) {
+        logError("bookmark update", error);
+        throw error; // Re-throw to allow caller to handle the error
+    }
+};
