@@ -21,7 +21,7 @@ import {
     IToolbarItem,
     Lute
 } from "siyuan";
-import { hasClosestByAttribute } from "./utils/hasClosest";
+import { hasClosestBlock, hasClosestByAttribute } from "./utils/hasClosest";
 import { getOembed } from "./oembed";
 import {
     addBookmark,
@@ -226,23 +226,25 @@ export default class OembedPlugin extends Plugin {
                 hotkey: "⇧⌘O",
                 tipPosition: "n",
                 tip: this.i18n.toggleOembed,
-                click: async () => {
-                    const block = getCurrentBlock();
-                    const id = block?.dataset.nodeId;
-                    let link = null;
-                    if (!block) return;
-
+                click: async (protyle: Protyle) => {
+                    const selectedElements =
+                        protyle.protyle.wysiwyg.element.querySelectorAll(
+                            ".protyle-wysiwyg--select"
+                        );
+                    console.log(
+                        "🚀 ~ file: index.ts:259 ~ OembedPlugin ~ click: ~ selectsElement:",
+                        selectedElements
+                    );
                     try {
-                        if (isEmptyParagraphBlock()) {
-                            // For empty blocks, prompt for link URL
-                            link = (await openDialog()) as string;
-                        } else {
-                            // For blocks with content, try to convert existing link
-                            link = extractUrlFromBlock(block);
-                        }
-                        if (link) {
-                            await convertToOembed(id, link);
-                        }
+                        const promises = Array.from(selectedElements).map(
+                            async (item: HTMLElement) => {
+                                const id = item?.dataset.nodeId;
+                                const link = extractUrlFromBlock(item);
+                                if (link) {
+                                    await convertToOembed(id, link);
+                                }
+                            }
+                        );
                     } catch (error) {
                         console.error("Error converting to oembed:", error);
                     }
@@ -254,43 +256,48 @@ export default class OembedPlugin extends Plugin {
                 hotkey: "⇧⌘K",
                 tipPosition: "n",
                 tip: this.i18n.toggleBookmarkCard,
-                click: async () => {
-                    const block = getCurrentBlock();
-                    const id = block?.dataset.nodeId;
-                    let link = null;
-                    if (!block) return;
-
+                click: async (protyle: Protyle) => {
+                    const selectedElements = protyle.protyle.wysiwyg.element.querySelectorAll(".protyle-wysiwyg--select");
+                    console.log(
+                        "🚀 ~ file: index.ts:259 ~ OembedPlugin ~ click: ~ selectedElements:",
+                        selectedElements
+                    );
                     try {
-                        if (isEmptyParagraphBlock()) {
-                            // For empty blocks, prompt for link URL
-                            link = (await openDialog()) as string;
-                        } else {
-                            // For blocks with content, try to convert existing link
-                            link = extractUrlFromBlock(block);
-                        }
-                        if (link) {
-                            const dom = await addBookmark({ link });
-                            const updateResult = await updateBlock(
-                                "dom",
-                                dom,
-                                id
-                            );
-                            if (!updateResult) {
-                                throw new Error("Failed to update block");
-                            }
-                            logSuccess("Block update");
+                        const promises = Array.from(selectedElements).map(
+                            async (item: HTMLElement) => {
+                                const id = item?.dataset.nodeId;
+                                const link = extractUrlFromBlock(item);
+                                if (link) {
+                                    const dom = await addBookmark({ link });
+                                    const updateResult = await updateBlock(
+                                        "dom",
+                                        dom,
+                                        id
+                                    );
+                                    if (!updateResult) {
+                                        throw new Error(
+                                            "Failed to update block"
+                                        );
+                                    }
+                                    logSuccess("Block update");
 
-                            // Set block attributes
-                            const attributeResult = setBlockAttrs(id, {
-                                "data-node-oembedOriginalUrl": link as string,
-                            });
+                                    // Set block attributes
+                                    const attributeResult = setBlockAttrs(id, {
+                                        "data-node-oembedOriginalUrl":
+                                            link as string,
+                                    });
 
-                            if (attributeResult) {
-                                logSuccess("Block attributes update");
-                            } else {
-                                logError("Block attributes update", "failed");
+                                    if (attributeResult) {
+                                        logSuccess("Block attributes update");
+                                    } else {
+                                        logError(
+                                            "Block attributes update",
+                                            "failed"
+                                        );
+                                    }
+                                }
                             }
-                        }
+                        );
                     } catch (error) {
                         console.error("Error converting to oembed:", error);
                     }
@@ -355,6 +362,10 @@ export default class OembedPlugin extends Plugin {
                 icon: "iconOembed",
                 label: this.i18n.toggleOembed,
                 click: () => {
+                    console.log(
+                        "🚀 ~ OembedPlugin ~ click ~ detail:",
+                        detail
+                    );
                     console.log(
                         "🚀 ~ OembedPlugin ~ click ~ detail:",
                         detail.blockElements
