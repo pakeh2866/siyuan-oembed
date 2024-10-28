@@ -13,7 +13,7 @@
     "toggleBookmarkCard": "Toggle Bookmark Card",
     "removeSpace": "移除空格",
     "getTab": "在日志中打印出已打开的所有自定义页签",
-    "name": "思源",
+    "name": "Oembed",
     "hello": {
         "makesure": "使用这个模板之前，请阅读<a href=\"https://github.com/siyuan-note/plugin-sample\">官方教程</a>, 确保自己已经理解了插件的基本开发流程。"
     },

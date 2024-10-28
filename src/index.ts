@@ -291,7 +291,6 @@ export default class OembedPlugin extends Plugin {
                                 logError("Block attributes update", "failed");
                             }
                         }
-
                     } catch (error) {
                         console.error("Error converting to oembed:", error);
                     }
@@ -300,10 +299,7 @@ export default class OembedPlugin extends Plugin {
         };
 
         this.protyleOptions = {
-            toolbar: [
-                ...builtinEditTools,
-                ...Object.values(ToolbarCommands)
-            ],
+            toolbar: [...builtinEditTools, ...Object.values(ToolbarCommands)],
         };
     }
 
@@ -353,32 +349,71 @@ export default class OembedPlugin extends Plugin {
     }
 
     private blockIconEvent({ detail }: any) {
-        console.log("🚀 ~ OembedPlugin ~ blockIconEvent ~ detail:", detail);
+        const blockIconCommandTemplates = [
+            {
+                id: "oembed",
+                icon: "iconOembed",
+                label: this.i18n.toggleOembed,
+                click: () => {
+                    console.log(
+                        "🚀 ~ OembedPlugin ~ click ~ detail:",
+                        detail.blockElements
+                    );
+                    try {
+                        const promises = detail.blockElements.map(
+                            async (item: HTMLElement) => {
+                                const id = item?.dataset.nodeId;
+                                const link = extractUrlFromBlock(item);
+                                if (link) {
+                                    await convertToOembed(id, link);
+                                }
+                            }
+                        );
+                    } catch (error) {
+                        console.error("Error converting to oembed:", error);
+                    }
+                },
+            },
+            {
+                id: "oembed",
+                icon: "iconLink",
+                label: this.i18n.toggleBookmarkCard,
+                click: () => {
+                    console.log(
+                        "🚀 ~ OembedPlugin ~ click ~ detail:",
+                        detail.blockElements
+                    );
+                    try {
+                        const promises = detail.blockElements.map(
+                            async (item: HTMLElement) => {
+                                const id = item?.dataset.nodeId;
+                                const link = extractUrlFromBlock(item);
+                                if (link) {
+                                    await convertToOembed(id, link);
+                                }
+                            }
+                        );
+                    } catch (error) {
+                        console.error("Error converting to oembed:", error);
+                    }
+                },
+            },
+        ];
+        let submenus: IMenuItemOption[] = [];
+        blockIconCommandTemplates.forEach((element) => {
+            submenus.push({
+                id: element.id,
+                icon: element.icon,
+                label: element.label,
+                click: element.click,
+            });
+        });
+
         detail.menu.addItem({
             icon: "iconOembed",
-            label: this.i18n.convertOembed,
-            click: () => {
-                console.log(
-                    "🚀 ~ OembedPlugin ~ click ~ detail:",
-                    detail.blockElements
-                );
-                try {
-                    const promises = detail.blockElements.map(
-                        async (item: HTMLElement) => {
-                            const id = item?.dataset.nodeId
-                            const link = extractUrlFromBlock(item);
-                            if (link) {
-                                await convertToOembed(id, link);
-                            }
-                        }
-                    );
-                } catch (error) {
-                    console.error("Error converting to oembed:", error);
-                }
-1                // Promise.all(promises).then(() => {
-                //     detail.protyle.getInstance().reload()
-                // });
-            },
+            label: this.i18n.name,
+            type: "submenu",
+            submenu: submenus,
         });
     }
 
