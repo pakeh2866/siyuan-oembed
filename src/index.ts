@@ -38,9 +38,10 @@ import {
     microlinkScraper,
     wrapInDiv,
     extractUrlFromBlock,
-    handleBookmarkUpdate,
+    toggleBookmarkCard,
     setPlugin,
     openDialog,
+    toggleOembed,
 } from "@/utils/utils";
 import "@/index.scss";
 import { getBlockByID, insertBlock, setBlockAttrs, updateBlock } from "@/api";
@@ -188,14 +189,42 @@ export default class OembedPlugin extends Plugin {
             );
         }
 
-        this.protyleSlash = [
-            {
-                filter: ["oembed", "Oembed"],
-                html: `<div class="b3-list-item__first"><span class="b3-list-item__text">Oembed</span><span class="b3-list-item__meta">Convert URLs in your markdown to the embedded version of those URLs</span></div>`,
-                id: "oembed",
-                callback: handleBookmarkUpdate,
+        let SlashCommandTemplates = {
+            oembed: {
+                filter: ["oembed", "Oembed", "oe"],
+                icon: "iconOembed",
+                name: "Oembed",
+                template: `Convert URLs in your markdown to the embedded version of those URLs`,
+                callback: toggleOembed,
             },
-        ];
+            bookmarkCard: {
+                filter: ["card", "bookmark", "bk"],
+                icon: "iconLink",
+                name: "Bookmark card",
+                template: `Convert URLs in your markdown to bookmark cards`,
+                callback: toggleBookmarkCard,
+            },
+        };
+
+        this.protyleSlash = Object.values(SlashCommandTemplates).map(
+            (template) => {
+                return {
+                    filter: template.filter,
+                    html: `<div class="b3-list-item__first"><svg class="b3-list-item__graphic"><use xlink:href="#${template.icon}"></use></svg><span class="b3-list-item__text">${template.name}</span><span class="b3-list-item__meta">${template.template}</span></div>`,
+                    id: template.name,
+                    callback: template.callback,
+                };
+            }
+        );
+
+        // this.protyleSlash = [
+        //     {
+        //         filter: ["oembed", "Oembed"],
+        //         html: `<div class="b3-list-item__first"><span class="b3-list-item__text">Oembed</span><span class="b3-list-item__meta">Convert URLs in your markdown to the embedded version of those URLs</span></div>`,
+        //         id: "oembed",
+        //         callback: handleBookmarkUpdate,
+        //     },
+        // ];
 
         this.protyleOptions = {
             toolbar: [

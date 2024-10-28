@@ -657,8 +657,7 @@ export const logSuccess = (operation: string) =>
 export const logError = (operation: string, error: unknown) =>
     console.error(`Error during ${operation}:`, error);
 
-// Main callback function
-export const handleBookmarkUpdate = async (protyle: Protyle): Promise<void> => {
+export const toggleBookmarkCard = async (protyle: Protyle): Promise<void> => {
     protyle.insert(window.Lute.Caret);
 
     const currentBlock = getCurrentBlock();
@@ -695,6 +694,34 @@ export const handleBookmarkUpdate = async (protyle: Protyle): Promise<void> => {
             logError("Block attributes update", "failed")
         }
 
+    } catch (error) {
+        logError("bookmark update", error);
+        throw error; // Re-throw to allow caller to handle the error
+    }
+};
+
+export const toggleOembed = async (protyle: Protyle): Promise<void> => {
+    protyle.insert(window.Lute.Caret);
+
+    const currentBlock = getCurrentBlock();
+
+    if (!currentBlock?.dataset.nodeId) {
+        throw new Error("No valid block ID found");
+    }
+
+    try {
+        const id = currentBlock.dataset.nodeId;
+        const link = (await openDialog()) as string;
+
+        if (!link) {
+            throw new Error("No link provided");
+        }
+
+        try {
+            await convertToOembed(id, link);
+        } catch (error) {
+            console.error("Error converting to oembed:", error);
+        }
     } catch (error) {
         logError("bookmark update", error);
         throw error; // Re-throw to allow caller to handle the error
