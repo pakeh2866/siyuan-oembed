@@ -1,5 +1,5 @@
 import getOembed from "@/oembed";
-import { Dialog, IOperation, IProtyle, Protyle } from "siyuan";
+import { Dialog, IOperation, IProtyle, Protyle, showMessage } from "siyuan";
 import { svelteDialog, inputDialog, inputDialogSync } from "@/libs/dialog";
 import { setBlockAttrs, updateBlock } from "@/api";
 import { i18n } from "@/i18n";
@@ -549,7 +549,7 @@ export const convertToBookmarkCard = async (
 
         await setBlockAttrs(id, {"data-node-oembedOriginalUrl": link,});
         logSuccess("Block successfully updated with oembed content");
-
+        showMessage("Link converted!");
     } catch (error) {
         logError("Failed to convert block to oembed:", error);
         throw error; // Re-throw to allow caller to handle the error
@@ -575,7 +575,7 @@ export const convertToOembed = async (
 
         await setBlockAttrs(id, { "data-node-oembedOriginalUrl": link });
         logSuccess("Block successfully updated with oembed content");
-
+        showMessage("Link converted!");
     } catch (error) {
         logError("Failed to convert block to oembed:", error);
         throw error; // Re-throw to allow caller to handle the error
