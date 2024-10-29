@@ -1,10 +1,10 @@
 import getOembed from "@/oembed";
 import { Dialog, IOperation, IProtyle, Protyle, showMessage } from "siyuan";
 import { svelteDialog, inputDialog, inputDialogSync } from "@/libs/dialog";
-import { setBlockAttrs, updateBlock } from "@/api";
+import { getBlockAttrs, setBlockAttrs, updateBlock } from "@/api";
 import { i18n } from "@/i18n";
 import OembedPlugin from "../.";
-import { defaultBookmarkCardStyle } from "@/const";
+import { defaultBookmarkCardStyle, CUSTOM_ATTRIBUTE } from "@/const";
 
 export let plugin: OembedPlugin;
 export function setPlugin(_plugin: any) {
@@ -547,12 +547,12 @@ export const convertToBookmarkCard = async (
             throw new Error("Failed to update block");
         }
 
-        await setBlockAttrs(id, {"data-node-oembedOriginalUrl": link,});
+        await setBlockAttrs(id, { [CUSTOM_ATTRIBUTE]: link });
         logSuccess("Block successfully updated with oembed content");
         showMessage("Link converted!");
     } catch (error) {
         logError("Failed to convert block to oembed:", error);
-        throw error; // Re-throw to allow caller to handle the error
+        throw error;
     }
 };
 
@@ -573,12 +573,12 @@ export const convertToOembed = async (
             throw new Error("Failed to update block");
         }
 
-        await setBlockAttrs(id, { "data-node-oembedOriginalUrl": link });
+        await setBlockAttrs(id, { [CUSTOM_ATTRIBUTE]: link });
         logSuccess("Block successfully updated with oembed content");
         showMessage("Link converted!");
     } catch (error) {
         logError("Failed to convert block to oembed:", error);
-        throw error; // Re-throw to allow caller to handle the error
+        throw error;
     }
 };
 
@@ -628,10 +628,31 @@ export const processSelectedBlocks = async (
                 }
                 // if the block is not empty,
                 else {
-                    // but doesn't have our custom tag yet (data-node-oembedoriginalurl) then search for link in the text
-                    link = extractUrlFromBlock(item);
+                    // check if the block has our custom tag already (CUSTOM_ATTRIBUTE)
+                    const isOembed = await isOembedLink(id)
+
+                    if (isOembed) {
+                        // toggle the link back if it had been previously converted
+                        const attrs = await getBlockAttrs(id);
+                        const originalLink = attrs?.[CUSTOM_ATTRIBUTE];
+
+                        const success = await updateBlock(
+                            "markdown",
+                            `[${originalLink}](${originalLink})`,
+                            id
+                        );
+                        if (!success) {
+                            throw new Error("Failed to update block");
+                        }
+
+                        await setBlockAttrs(id, { [CUSTOM_ATTRIBUTE]: null });
+
+                    }
+                    else {
+                        // extract the link from the block
+                        link = extractUrlFromBlock(item);
+                    }
                 }
-                    // if it has the custom tag (data-node-oembedoriginalurl) then toggle back to regular url
 
                 if (!link || !regexp.url.test(link)) {
                     return;
@@ -642,7 +663,6 @@ export const processSelectedBlocks = async (
                 } catch (error) {
                     logError("Error using processor:", error);
                 }
-
             } catch (error) {
                 logError("bookmark update", error);
                 throw error; // Re-throw to allow caller to handle the error
@@ -653,3 +673,8 @@ export const processSelectedBlocks = async (
         logError("Error processing blocks:", error);
     }
 };
+
+export const isOembedLink = async (blockId: string): Promise<boolean> => {
+    const attrs = await getBlockAttrs(blockId);
+    return !!(attrs?.[CUSTOM_ATTRIBUTE] && attrs[CUSTOM_ATTRIBUTE].trim() !== '');
+}

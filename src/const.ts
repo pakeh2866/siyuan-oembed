@@ -1,6 +1,7 @@
 import { IToolbarItem } from "siyuan";
 
 export const STORAGE_NAME = "menu-config";
+export const CUSTOM_ATTRIBUTE = "custom-oembed-link";
 
 export const builtinEditTools: Array<string | IToolbarItem> = [
     "block-ref",
