@@ -57,7 +57,7 @@ import SettingExample from "@/setting-example.svelte";
 
 import { SettingUtils } from "./libs/setting-utils";
 import { svelteDialog, inputDialog, inputDialogSync } from "./libs/dialog";
-import { SlashCommandTemplates, ToolbarCommands } from "./config";
+import { BlockIconTemplate, createBlockIconConfig, SlashCommandTemplates, ToolbarCommandsTemplates } from "./config";
 import { builtinEditTools, STORAGE_NAME } from "./const";
 
 export default class OembedPlugin extends Plugin {
@@ -185,7 +185,7 @@ export default class OembedPlugin extends Plugin {
         );
 
         this.protyleOptions = {
-            toolbar: [...builtinEditTools, ...Object.values(ToolbarCommands)],
+            toolbar: [...builtinEditTools, ...Object.values(ToolbarCommandsTemplates)],
         };
     }
 
@@ -234,70 +234,54 @@ export default class OembedPlugin extends Plugin {
         });
     }
 
-    private blockIconEvent({ detail }: any) {
-        const blockIconCommandTemplates = [
-            {
-                id: "oembed",
-                icon: "iconOembed",
-                label: this.i18n.toggleOembed,
-                click: () => {
-                    console.log(
-                        "🚀 ~ OembedPlugin ~ click ~ detail:",
-                        detail
-                    );
-                    console.log(
-                        "🚀 ~ OembedPlugin ~ click ~ detail:",
-                        detail.blockElements
-                    );
-                    try {
-                        const promises = detail.blockElements.map(
-                            async (item: HTMLElement) => {
-                                const id = item?.dataset.nodeId;
-                                const link = extractUrlFromBlock(item);
-                                if (link) {
-                                    await convertToOembed(id, link);
-                                }
-                            }
-                        );
-                    } catch (error) {
-                        console.error("Error converting to oembed:", error);
+    private createBlockHandler(blockElements: HTMLElement[]) {
+        return async () => {
+            try {
+                const promises = blockElements.map(
+                    async (item: HTMLElement) => {
+                        const id = item?.dataset.nodeId;
+                        const link = extractUrlFromBlock(item);
+                        if (link) {
+                            await convertToOembed(id, link);
+                        }
                     }
-                },
+                );
+                await Promise.all(promises);
+            } catch (error) {
+                console.error("Error converting to oembed:", error);
+            }
+        };
+    }
+
+    private attachClickHandler(
+        template: BlockIconTemplate,
+        blockElements: HTMLElement[]
+    ): IMenuItemOption {
+        return {
+            ...template,
+            click: () => {
+                console.log(
+                    "🚀 ~ OembedPlugin ~ click ~ blockElements:",
+                    blockElements
+                );
+                this.createBlockHandler(blockElements)();
             },
-            {
-                id: "oembed",
-                icon: "iconLink",
-                label: this.i18n.toggleBookmarkCard,
-                click: () => {
-                    console.log(
-                        "🚀 ~ OembedPlugin ~ click ~ detail:",
-                        detail.blockElements
-                    );
-                    try {
-                        const promises = detail.blockElements.map(
-                            async (item: HTMLElement) => {
-                                const id = item?.dataset.nodeId;
-                                const link = extractUrlFromBlock(item);
-                                if (link) {
-                                    await convertToOembed(id, link);
-                                }
-                            }
-                        );
-                    } catch (error) {
-                        console.error("Error converting to oembed:", error);
-                    }
-                },
-            },
-        ];
-        let submenus: IMenuItemOption[] = [];
-        blockIconCommandTemplates.forEach((element) => {
-            submenus.push({
-                id: element.id,
-                icon: element.icon,
-                label: element.label,
-                click: element.click,
-            });
-        });
+        };
+    }
+
+    // Add block icon menu
+    private blockIconEvent({detail}: {
+        detail: {
+            blockElements: HTMLElement[];
+            menu: { addItem: (item: IMenuItemOption) => void };
+        };
+    }) {
+        const blockIconCommandTemplates = createBlockIconConfig();
+
+        const submenus: IMenuItemOption[] = blockIconCommandTemplates.map(
+            (template) =>
+                this.attachClickHandler(template, detail.blockElements)
+        );
 
         detail.menu.addItem({
             icon: "iconOembed",
@@ -307,6 +291,7 @@ export default class OembedPlugin extends Plugin {
         });
     }
 
+    // Add Top Menu Items for Settings
     private addMenu(rect?: DOMRect) {
         const menu = new Menu("topBarSample", () => {
             console.log(this.i18n.byeMenu);

@@ -1,8 +1,13 @@
-import { bookmarkProcessor, oembedProcessor, processSelectedBlocks, toggleBookmarkCard, toggleOembed } from "./utils/utils";
-import OembedPlugin from ".";
+import { bookmarkProcessor, getSelectedBlocks, oembedProcessor, processSelectedBlocks, toggleBookmarkCard, toggleOembed } from "./utils/utils";
 import { Protyle } from "siyuan";
 
-export let plugin: OembedPlugin;
+import { i18n } from "./i18n";
+
+export interface BlockIconTemplate {
+    id: string;
+    icon: string;
+    label: string;
+}
 
 export const SlashCommandTemplates = {
     oembed: {
@@ -21,15 +26,18 @@ export const SlashCommandTemplates = {
     },
 };
 
-export const ToolbarCommands = {
+export const ToolbarCommandsTemplates = {
     oembed: {
         name: "insert-oembed",
         icon: "iconOembed",
         hotkey: "⇧⌘O",
         tipPosition: "n",
-        tip: plugin.i18n.toggleOembed,
+        tip: i18n.toggleOembed,
         click: async (protyle: Protyle) => {
-            await processSelectedBlocks(protyle, oembedProcessor);
+            await processSelectedBlocks(
+                getSelectedBlocks(protyle),
+                oembedProcessor
+            );
         },
     },
     bookmarkCard: {
@@ -37,9 +45,25 @@ export const ToolbarCommands = {
         icon: "iconLink",
         hotkey: "⇧⌘K",
         tipPosition: "n",
-        tip: plugin.i18n.toggleBookmarkCard,
+        tip: i18n.toggleBookmarkCard,
         click: async (protyle: Protyle) => {
-            await processSelectedBlocks(protyle, bookmarkProcessor);
+            await processSelectedBlocks(
+                getSelectedBlocks(protyle),
+                bookmarkProcessor
+            );
         },
     },
 };
+
+export const createBlockIconConfig = (): BlockIconTemplate[] => [
+    {
+        id: "oembed",
+        icon: "iconOembed",
+        label: i18n.toggleOembed,
+    },
+    {
+        id: "bookmarkCard",
+        icon: "iconLink",
+        label: i18n.toggleBookmarkCard,
+    },
+];

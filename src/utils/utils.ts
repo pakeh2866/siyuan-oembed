@@ -2,6 +2,7 @@ import getOembed from "@/oembed";
 import { Dialog, IOperation, IProtyle, Protyle } from "siyuan";
 import { svelteDialog, inputDialog, inputDialogSync } from "@/libs/dialog";
 import { setBlockAttrs, updateBlock } from "@/api";
+import { i18n } from "@/i18n";
 import OembedPlugin from "../.";
 
 export let plugin: OembedPlugin;
@@ -630,11 +631,11 @@ export const openDialog = (args?: {
     }) => {
         return new Promise((resolve, reject) => {
             const dialog = new Dialog({
-                title: plugin.i18n.insertURLDialogTitle,
+                title: i18n.insertURLDialogTitle,
                 content: `<div class="b3-dialog__content"><textarea class="b3-text-field fn__block" placeholder="Please enter the URL"></textarea></div>
                     <div class="b3-dialog__action">
-                    <button class="b3-button b3-button--cancel">${plugin.i18n.cancel}</button><div class="fn__space"></div>
-                    <button class="b3-button b3-button--text">${plugin.i18n.save}</button>
+                    <button class="b3-button b3-button--cancel">${i18n.cancel}</button><div class="fn__space"></div>
+                    <button class="b3-button b3-button--text">${i18n.save}</button>
                     </div>`,
                 width: "520px",
             });
@@ -733,20 +734,17 @@ export const toggleOembed = async (protyle: Protyle): Promise<void> => {
 };
 
 export const processSelectedBlocks = async (
-    protyle: Protyle,
+    blocks: HTMLElement[],
     processor: (id: string, link: string) => Promise<void>
 ) => {
-    const selectedElements = getSelectedBlocks(protyle);
     try {
-        const promises = Array.from(selectedElements).map(
-            async (item: HTMLElement) => {
-                const id = item?.dataset.nodeId;
-                const link = extractUrlFromBlock(item);
-                if (link && id) {
-                    await processor(id, link);
-                }
+        const promises = blocks.map(async (item: HTMLElement) => {
+            const id = item?.dataset.nodeId;
+            const link = extractUrlFromBlock(item);
+            if (link && id) {
+                await processor(id, link);
             }
-        );
+        });
         await Promise.all(promises);
     } catch (error) {
         console.error("Error processing blocks:", error);
