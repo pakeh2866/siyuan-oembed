@@ -63,6 +63,19 @@ export const isSiyuanBlock = (element: any): boolean => {
     );
 }
 
+export const getBlocks = (protyle: Protyle): HTMLElement[] => {
+    const selectedBlocks = getSelectedBlocks(protyle);
+
+    // Check if selectedBlocks has elements
+    if (selectedBlocks.length > 0) {
+        return selectedBlocks;
+    }
+
+    // Get current block and return it as a single-element array
+    const currentBlock = getCurrentBlock();
+    return currentBlock ? [currentBlock] : [];
+};
+
 export const getCurrentBlock = (): HTMLElement | null | undefined => {
     const selection = document.getSelection();
     let element: HTMLElement | null | undefined = selection?.focusNode as HTMLElement;
@@ -75,9 +88,11 @@ export const getCurrentBlock = (): HTMLElement | null | undefined => {
     return element;
 }
 
-export const getSelectedBlocks = (protyle: Protyle) => {
-    return protyle.protyle.wysiwyg.element.querySelectorAll(".protyle-wysiwyg--select");
-}
+export const getSelectedBlocks = (protyle: Protyle): Array<HTMLElement> => {
+    return [...protyle.protyle.wysiwyg.element.querySelectorAll(
+        ".protyle-wysiwyg--select"
+    )];
+};
 
 export const isParagraphBlock = (): boolean=> {
     const selection = document.getSelection();
@@ -105,7 +120,7 @@ export const isHTMLBlock = (): boolean=> {
     return element instanceof HTMLElement && element.dataset.type === "NodeHTMLBlock";
 }
 
-export const isEmptyParagraphBlock = (): boolean => {
+export const isSelectionEmpty = (): boolean => {
     const selection = document.getSelection();
     let element: Node | null = selection?.focusNode;
     while (element
@@ -118,38 +133,21 @@ export const isEmptyParagraphBlock = (): boolean => {
     return element instanceof HTMLElement && element.dataset.type === "NodeParagraph" && element.querySelector('[contenteditable="true"]')?.textContent.trim() === '';
 }
 
-// export const isEmptyBlock = (): boolean=> {
-//     const selection = document.getSelection();
-//     let element: Node | null = selection?.focusNode;
-//     while (element
-//         && (!(element instanceof HTMLElement)
-//             || !isSiyuanBlock(element)
-//         )
-//     ) {
-//         element = element.parentElement;
-//     }
-//     return element instanceof HTMLElement && element.querySelector('[contenteditable="true"]')?.textContent.trim() === '';
-// }
-
-// export const isEmptyParagraphBlock = (): boolean => {
-//     const selection = document.getSelection();
-//     const element = selection?.focusNode?.parentElement;
-//     return element instanceof HTMLElement
-//         && isSiyuanBlock(element)
-//         && element.dataset.type === "NodeParagraph"
-//         && element.querySelector('[contenteditable="true"]')?.textContent.trim() === '';
-// }
-
-// export const isEmptyBlock = (): boolean => {
-//     const selection = document.getSelection();
-//     console.log("🚀 ~ isEmptyBlock ~ selection:", selection?.focusNode)
-//     const element = selection?.focusNode?.parentElement;
-//     return element instanceof HTMLElement
-//         && isSiyuanBlock(element)
-//         && element.querySelector('[contenteditable="true"]')?.textContent.trim() === '';
-// }
-
-
+export const isEmptyParagraphBlock = (element: HTMLElement): boolean => {
+    while (
+        element &&
+        (!(element instanceof HTMLElement) || !isSiyuanBlock(element))
+    ) {
+        element = element.parentElement;
+    }
+    return (
+        element instanceof HTMLElement &&
+        element.dataset.type === "NodeParagraph" &&
+        element
+            .querySelector('[contenteditable="true"]')
+            ?.textContent.trim() === ""
+    );
+};
 
 export const genHtmlBlock = (data: DOMStringMap): string => {
     return `<div data-node-id="${data.id}" data-node-index="${data.index}" data-type="NodeHTMLBlock" data-oembed="true" class="render-node protyle-wysiwyg--select" updated="${data.updated}" data-subtype="block">
@@ -185,28 +183,6 @@ export const getAll = <ElementType extends HTMLElement>(
 interface BlockAttributes {
     "data-node-oembedOriginalUrl": string;
 }
-
-export const convertToOembed = async (id: string, link: string): Promise<void> => {
-    if (!id || !link) return;
-
-    try {
-        const html = await getOembed(link);
-        if (!html) return;
-
-        const wrappedHtml = wrapInDiv(html);
-        const success = await updateBlock("dom", wrappedHtml, id);
-
-        if (success) {
-            await setBlockAttrs(id, {
-                "data-node-oembedOriginalUrl": link
-            });
-            console.log("Block successfully updated with oembed content");
-        }
-    } catch (error) {
-        console.error("Failed to convert block to oembed:", error);
-        throw error; // Re-throw to allow caller to handle the error
-    }
-};
 
 export const extractUrlFromBlock = (block: HTMLElement): string | null => {
     const editElement = block.querySelector<HTMLElement>('[contenteditable="true"]');
@@ -380,8 +356,6 @@ except for when immediately preceeded by a heading */
             </figure></div></div>
             `;
 };
-
-
 
 export const microlinkScraper = async (url) => {
     return fetch(`https://api.microlink.io/?url=${encodeURI(url)}`)
@@ -619,7 +593,6 @@ export const addBookmark = async (config?: LinkData) => {
         }
     };
 
-
 export const openDialog = (args?: {
         title: string;
         placeholder?: string;
@@ -663,6 +636,7 @@ export const logError = (operation: string, error: unknown) =>
     console.error(`Error during ${operation}:`, error);
 
 export const toggleBookmarkCard = async (protyle: Protyle): Promise<void> => {
+    console.log("🚀 ~ file: utils.ts:666 ~ toggleBookmarkCard")
     protyle.insert(window.Lute.Caret);
 
     const currentBlock = getCurrentBlock();
@@ -705,17 +679,42 @@ export const toggleBookmarkCard = async (protyle: Protyle): Promise<void> => {
     }
 };
 
+export const convertToOembed = async (
+    id: string,
+    link: string
+): Promise<void> => {
+    if (!id || !link) return;
+
+    try {
+        const html = await getOembed(link);
+        if (!html) return;
+
+        const wrappedHtml = wrapInDiv(html);
+        const success = await updateBlock("dom", wrappedHtml, id);
+
+        if (success) {
+            await setBlockAttrs(id, {
+                "data-node-oembedOriginalUrl": link,
+            });
+            logSuccess("Block successfully updated with oembed content");
+        }
+    } catch (error) {
+        logError("Failed to convert block to oembed:", error);
+        throw error; // Re-throw to allow caller to handle the error
+    }
+};
+
 export const toggleOembed = async (protyle: Protyle): Promise<void> => {
     protyle.insert(window.Lute.Caret);
 
     const currentBlock = getCurrentBlock();
+    const id = currentBlock.dataset.nodeId;
 
-    if (!currentBlock?.dataset.nodeId) {
+    if (!id) {
         throw new Error("No valid block ID found");
     }
 
     try {
-        const id = currentBlock.dataset.nodeId;
         const link = (await openDialog()) as string;
 
         if (!link) {
@@ -725,7 +724,7 @@ export const toggleOembed = async (protyle: Protyle): Promise<void> => {
         try {
             await convertToOembed(id, link);
         } catch (error) {
-            console.error("Error converting to oembed:", error);
+            logError("Error converting to oembed:", error);
         }
     } catch (error) {
         logError("bookmark update", error);
@@ -734,20 +733,46 @@ export const toggleOembed = async (protyle: Protyle): Promise<void> => {
 };
 
 export const processSelectedBlocks = async (
-    blocks: HTMLElement[],
+    blocks:  HTMLElement[],
     processor: (id: string, link: string) => Promise<void>
 ) => {
+    let link: string = null
     try {
         const promises = blocks.map(async (item: HTMLElement) => {
             const id = item?.dataset.nodeId;
-            const link = extractUrlFromBlock(item);
-            if (link && id) {
-                await processor(id, link);
+            if (!id) {
+                throw new Error("No valid block ID found");
+            }
+            try {
+                // if the block is empty, open the dialog to get the link
+                if (isEmptyParagraphBlock(item)) {
+                    link = (await openDialog()) as string;
+                }
+                // if the block is not empty,
+                else {
+                    // but doesn't have our custom tag yet (data-node-oembedoriginalurl) then search for link in the text
+                    link = extractUrlFromBlock(item);
+                }
+                    // if it has the custom tag (data-node-oembedoriginalurl) then toggle back to regular url
+
+                if (!link) {
+                    return;
+                }
+
+                try {
+                    await processor(id, link);
+                } catch (error) {
+                    logError("Error using processor:", error);
+                }
+
+            } catch (error) {
+                logError("bookmark update", error);
+                throw error; // Re-throw to allow caller to handle the error
             }
         });
         await Promise.all(promises);
     } catch (error) {
-        console.error("Error processing blocks:", error);
+        logError("Error processing blocks:", error);
     }
 };
 
@@ -757,22 +782,23 @@ export const oembedProcessor = async (id: string, link: string) => {
 };
 
 export const bookmarkProcessor = async (id: string, link: string) => {
-    const dom = await addBookmark({ link });
-    const updateResult = await updateBlock("dom", dom, id);
+    try {
+        const dom = await addBookmark({ link });
+        const updateResult = await updateBlock("dom", dom, id);
 
-    if (!updateResult) {
-        throw new Error("Failed to update block");
-    }
-    logSuccess("Block update");
+        if (!updateResult) {
+            throw new Error("Failed to update block");
+        }
+        logSuccess("Block update");
 
-    // Set block attributes
-    const attributeResult = await setBlockAttrs(id, {
-        "data-node-oembedOriginalUrl": link,
-    });
-
-    if (attributeResult) {
+        // Set block attributes
+        await setBlockAttrs(id, {
+            "data-node-oembedOriginalUrl": link,
+        });
         logSuccess("Block attributes update");
-    } else {
-        logError("Block attributes update", "failed");
+
+    } catch (error) {
+        logError("Error processing bookmark:", error);
     }
+
 };

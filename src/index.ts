@@ -260,10 +260,6 @@ export default class OembedPlugin extends Plugin {
         return {
             ...template,
             click: () => {
-                console.log(
-                    "🚀 ~ OembedPlugin ~ click ~ blockElements:",
-                    blockElements
-                );
                 this.createBlockHandler(blockElements)();
             },
         };

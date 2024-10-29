@@ -1,4 +1,4 @@
-import { bookmarkProcessor, getSelectedBlocks, oembedProcessor, processSelectedBlocks, toggleBookmarkCard, toggleOembed } from "./utils/utils";
+import { bookmarkProcessor, getBlocks, oembedProcessor, processSelectedBlocks, toggleBookmarkCard, toggleOembed } from "./utils/utils";
 import { Protyle } from "siyuan";
 
 import { i18n } from "./i18n";
@@ -34,10 +34,8 @@ export const ToolbarCommandsTemplates = {
         tipPosition: "n",
         tip: i18n.toggleOembed,
         click: async (protyle: Protyle) => {
-            await processSelectedBlocks(
-                getSelectedBlocks(protyle),
-                oembedProcessor
-            );
+            const selectedBlock = getBlocks(protyle);
+            await processSelectedBlocks(selectedBlock, oembedProcessor);
         },
     },
     bookmarkCard: {
@@ -47,10 +45,8 @@ export const ToolbarCommandsTemplates = {
         tipPosition: "n",
         tip: i18n.toggleBookmarkCard,
         click: async (protyle: Protyle) => {
-            await processSelectedBlocks(
-                getSelectedBlocks(protyle),
-                bookmarkProcessor
-            );
+            const selectedBlock = getBlocks(protyle);
+            await processSelectedBlocks(selectedBlock,bookmarkProcessor);
         },
     },
 };
