@@ -44,6 +44,10 @@ import {
     toggleOembed,
     logSuccess,
     logError,
+    getSelectedBlocks,
+    processSelectedBlocks,
+    oembedProcessor,
+    bookmarkProcessor,
 } from "@/utils/utils";
 import "@/index.scss";
 import { getBlockByID, insertBlock, setBlockAttrs, updateBlock } from "@/api";
@@ -53,30 +57,8 @@ import SettingExample from "@/setting-example.svelte";
 
 import { SettingUtils } from "./libs/setting-utils";
 import { svelteDialog, inputDialog, inputDialogSync } from "./libs/dialog";
-
-const STORAGE_NAME = "menu-config";
-
-const builtinEditTools: Array<string | IToolbarItem> = [
-    "block-ref",
-    "a",
-    "|",
-    "text",
-    "strong",
-    "em",
-    "u",
-    "s",
-    "mark",
-    "sup",
-    "sub",
-    "clear",
-    "|",
-    "code",
-    "kbd",
-    "tag",
-    "inline-math",
-    "inline-memo",
-    "|"
-]
+import { SlashCommandTemplates, ToolbarCommands } from "./config";
+import { builtinEditTools, STORAGE_NAME } from "./const";
 
 export default class OembedPlugin extends Plugin {
     customTab: () => IModel;
@@ -191,23 +173,6 @@ export default class OembedPlugin extends Plugin {
             );
         }
 
-        const SlashCommandTemplates = {
-            oembed: {
-                filter: ["oembed", "Oembed", "oe"],
-                icon: "iconOembed",
-                name: "Oembed",
-                template: `Convert URLs in your markdown to the embedded version of those URLs`,
-                callback: toggleOembed,
-            },
-            bookmarkCard: {
-                filter: ["card", "bookmark", "bk"],
-                icon: "iconLink",
-                name: "Bookmark card",
-                template: `Convert URLs in your markdown to bookmark cards`,
-                callback: toggleBookmarkCard,
-            },
-        };
-
         this.protyleSlash = Object.values(SlashCommandTemplates).map(
             (template) => {
                 return {
@@ -218,92 +183,6 @@ export default class OembedPlugin extends Plugin {
                 };
             }
         );
-
-        const ToolbarCommands = {
-            oembed: {
-                name: "insert-oembed",
-                icon: "iconOembed",
-                hotkey: "⇧⌘O",
-                tipPosition: "n",
-                tip: this.i18n.toggleOembed,
-                click: async (protyle: Protyle) => {
-                    const selectedElements =
-                        protyle.protyle.wysiwyg.element.querySelectorAll(
-                            ".protyle-wysiwyg--select"
-                        );
-                    console.log(
-                        "🚀 ~ file: index.ts:259 ~ OembedPlugin ~ click: ~ selectsElement:",
-                        selectedElements
-                    );
-                    try {
-                        const promises = Array.from(selectedElements).map(
-                            async (item: HTMLElement) => {
-                                const id = item?.dataset.nodeId;
-                                const link = extractUrlFromBlock(item);
-                                if (link) {
-                                    await convertToOembed(id, link);
-                                }
-                            }
-                        );
-                    } catch (error) {
-                        console.error("Error converting to oembed:", error);
-                    }
-                },
-            },
-            bookmarkCard: {
-                name: "insert-bookmarkCard",
-                icon: "iconLink",
-                hotkey: "⇧⌘K",
-                tipPosition: "n",
-                tip: this.i18n.toggleBookmarkCard,
-                click: async (protyle: Protyle) => {
-                    const selectedElements = protyle.protyle.wysiwyg.element.querySelectorAll(".protyle-wysiwyg--select");
-                    console.log(
-                        "🚀 ~ file: index.ts:259 ~ OembedPlugin ~ click: ~ selectedElements:",
-                        selectedElements
-                    );
-                    try {
-                        const promises = Array.from(selectedElements).map(
-                            async (item: HTMLElement) => {
-                                const id = item?.dataset.nodeId;
-                                const link = extractUrlFromBlock(item);
-                                if (link) {
-                                    const dom = await addBookmark({ link });
-                                    const updateResult = await updateBlock(
-                                        "dom",
-                                        dom,
-                                        id
-                                    );
-                                    if (!updateResult) {
-                                        throw new Error(
-                                            "Failed to update block"
-                                        );
-                                    }
-                                    logSuccess("Block update");
-
-                                    // Set block attributes
-                                    const attributeResult = setBlockAttrs(id, {
-                                        "data-node-oembedOriginalUrl":
-                                            link as string,
-                                    });
-
-                                    if (attributeResult) {
-                                        logSuccess("Block attributes update");
-                                    } else {
-                                        logError(
-                                            "Block attributes update",
-                                            "failed"
-                                        );
-                                    }
-                                }
-                            }
-                        );
-                    } catch (error) {
-                        console.error("Error converting to oembed:", error);
-                    }
-                },
-            },
-        };
 
         this.protyleOptions = {
             toolbar: [...builtinEditTools, ...Object.values(ToolbarCommands)],

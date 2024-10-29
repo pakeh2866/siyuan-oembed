@@ -74,6 +74,10 @@ export const getCurrentBlock = (): HTMLElement | null | undefined => {
     return element;
 }
 
+export const getSelectedBlocks = (protyle: Protyle) => {
+    return protyle.protyle.wysiwyg.element.querySelectorAll(".protyle-wysiwyg--select");
+}
+
 export const isParagraphBlock = (): boolean=> {
     const selection = document.getSelection();
     let element: Node | null = selection?.focusNode;
@@ -725,5 +729,52 @@ export const toggleOembed = async (protyle: Protyle): Promise<void> => {
     } catch (error) {
         logError("bookmark update", error);
         throw error; // Re-throw to allow caller to handle the error
+    }
+};
+
+export const processSelectedBlocks = async (
+    protyle: Protyle,
+    processor: (id: string, link: string) => Promise<void>
+) => {
+    const selectedElements = getSelectedBlocks(protyle);
+    try {
+        const promises = Array.from(selectedElements).map(
+            async (item: HTMLElement) => {
+                const id = item?.dataset.nodeId;
+                const link = extractUrlFromBlock(item);
+                if (link && id) {
+                    await processor(id, link);
+                }
+            }
+        );
+        await Promise.all(promises);
+    } catch (error) {
+        console.error("Error processing blocks:", error);
+    }
+};
+
+// Specific processors
+export const oembedProcessor = async (id: string, link: string) => {
+    await convertToOembed(id, link);
+};
+
+export const bookmarkProcessor = async (id: string, link: string) => {
+    const dom = await addBookmark({ link });
+    const updateResult = await updateBlock("dom", dom, id);
+
+    if (!updateResult) {
+        throw new Error("Failed to update block");
+    }
+    logSuccess("Block update");
+
+    // Set block attributes
+    const attributeResult = await setBlockAttrs(id, {
+        "data-node-oembedOriginalUrl": link,
+    });
+
+    if (attributeResult) {
+        logSuccess("Block attributes update");
+    } else {
+        logError("Block attributes update", "failed");
     }
 };
