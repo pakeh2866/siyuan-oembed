@@ -4,6 +4,7 @@ import { svelteDialog, inputDialog, inputDialogSync } from "@/libs/dialog";
 import { setBlockAttrs, updateBlock } from "@/api";
 import { i18n } from "@/i18n";
 import OembedPlugin from "../.";
+import { defaultBookmarkCardStyle } from "@/const";
 
 export let plugin: OembedPlugin;
 export function setPlugin(_plugin: any) {
@@ -180,10 +181,6 @@ export const getAll = <ElementType extends HTMLElement>(
     parent: ParentNode = document
 ): ElementType[] => Array.prototype.slice.call(parent.querySelectorAll<ElementType>(selector), 0);
 
-interface BlockAttributes {
-    "data-node-oembedOriginalUrl": string;
-}
-
 export const extractUrlFromBlock = (block: HTMLElement): string | null => {
     const editElement = block.querySelector<HTMLElement>('[contenteditable="true"]');
     if (!editElement) return null;
@@ -358,6 +355,7 @@ except for when immediately preceeded by a heading */
 };
 
 export const microlinkScraper = async (url) => {
+    if (!regexp.url.test(url)) return;
     return fetch(`https://api.microlink.io/?url=${encodeURI(url)}`)
         .then((res) => {
             if (res.ok) {
@@ -392,7 +390,7 @@ export const stripNewLines = (input: string): string => {
     return input.replace(/\n/g, '');
 };
 
-export const addBookmark = async (config?: LinkData) => {
+export const generateBookmarkCard = async (config?: LinkData) => {
         let conf: LinkData = {
             title: "",
             description: "",
@@ -408,6 +406,7 @@ export const addBookmark = async (config?: LinkData) => {
         try {
             if (conf.link) {
                 const newConf = await microlinkScraper(conf.link);
+                if (!newConf) return
                 const {
                     url,
                     title,
@@ -417,138 +416,7 @@ export const addBookmark = async (config?: LinkData) => {
                     author,
                     publisher,
                 } = newConf;
-                return `<div>
-                            <style>
-                                .kg-card {
-                                    font-family:
-                                        'Inter Variable',
-                                        ui-sans-serif,
-                                        system-ui,
-                                        -apple-system,
-                                        BlinkMacSystemFont,
-                                        Segoe UI,
-                                        Roboto,
-                                        Helvetica Neue,
-                                        Arial,
-                                        Noto Sans,
-                                        sans-serif,
-                                        Apple Color Emoji,
-                                        Segoe UI Emoji,
-                                        Segoe UI Symbol,
-                                        Noto Color Emoji;
-                                    font-size: 1rem;
-                                }
-                                .kg-card-main {
-                                    max-width: 800px;
-                                    margin: 0 auto;
-                                    display: flex;
-                                    justify-content: center;
-                                }
-                                .kg-bookmark-card,
-                                .kg-bookmark-card * {
-                                    box-sizing: border-box;
-                                }
-                                .kg-bookmark-card,
-                                .kg-bookmark-publisher {
-                                    position: relative;
-                                    /* width: 100%; */
-                                }
-                                .kg-bookmark-card a.kg-bookmark-container,
-                                .kg-bookmark-card a.kg-bookmark-container:hover {
-                                    display: flex;
-                                    background: var(--bookmark-background-color);
-                                    text-decoration: none;
-                                    border-radius: 6px;
-                                    border: 1px solid rgb(124 139 154 / 25%);
-                                    overflow: hidden;
-                                    color: var(--bookmark-text-color);
-                                }
-                                .kg-bookmark-content {
-                                    display: flex;
-                                    flex-direction: column;
-                                    flex-grow: 1;
-                                    flex-basis: 100%;
-                                    align-items: flex-start;
-                                    justify-content: flex-start;
-                                    padding: 20px;
-                                    overflow: hidden;
-                                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell',
-                                        'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
-                                }
-                                .kg-bookmark-title {
-                                    font-size: 15px;
-                                    line-height: 1.4em;
-                                    font-weight: 600;
-                                }
-                                .kg-bookmark-description {
-                                    display: -webkit-box;
-                                    font-size: 14px;
-                                    line-height: 1.5em;
-                                    margin-top: 3px;
-                                    font-weight: 400;
-                                    max-height: 44px;
-                                    overflow-y: hidden;
-                                    opacity: 0.7;
-                                }
-                                .kg-bookmark-metadata {
-                                    display: flex;
-                                    align-items: center;
-                                    margin-top: 22px;
-                                    width: 100%;
-                                    font-size: 14px;
-                                    font-weight: 500;
-                                    white-space: nowrap;
-                                }
-                                .kg-bookmark-metadata>*:not(img) {
-                                    opacity: 0.7;
-                                }
-                                .kg-bookmark-icon {
-                                    width: 20px;
-                                    height: 20px;
-                                    margin-right: 6px;
-                                }
-                                .kg-bookmark-author,
-                                .kg-bookmark-publisher {
-                                    display: inline;
-                                }
-                                .kg-bookmark-publisher {
-                                    text-overflow: ellipsis;
-                                    overflow: hidden;
-                                    max-width: 240px;
-                                    white-space: nowrap;
-                                    display: block;
-                                    line-height: 1.65em;
-                                }
-                                .kg-bookmark-metadata>span:nth-of-type(2) {
-                                    font-weight: 400;
-                                }
-                                .kg-bookmark-metadata>span:nth-of-type(2):before {
-                                    content: '•';
-                                    margin: 0 6px;
-                                }
-                                .kg-bookmark-metadata>span:last-of-type {
-                                    overflow: hidden;
-                                    text-overflow: ellipsis;
-                                }
-                                .kg-bookmark-thumbnail {
-                                    position: relative;
-                                    flex-grow: 1;
-                                    min-width: 33%;
-                                }
-                                .kg-bookmark-thumbnail img {
-                                    /* width: 100%; */
-                                    height: 100%;
-                                    object-fit: contain;
-                                    /* or contain */
-                                    position: absolute;
-                                    top: 0;
-                                    left: 0;
-                                    border-radius: 0 2px 2px 0;
-                                }
-                                .w-full {
-                                    width: 100%;
-                                }
-                            </style>
+                return `${defaultBookmarkCardStyle}
                             <main class="kg-card-main">
                                 <div class="w-full">
                                     <div class="kg-card kg-bookmark-card">
@@ -636,45 +504,54 @@ export const logError = (operation: string, error: unknown) =>
     console.error(`Error during ${operation}:`, error);
 
 export const toggleBookmarkCard = async (protyle: Protyle): Promise<void> => {
-    console.log("🚀 ~ file: utils.ts:666 ~ toggleBookmarkCard")
     protyle.insert(window.Lute.Caret);
 
     const currentBlock = getCurrentBlock();
+    const id = currentBlock.dataset.nodeId;
 
-    if (!currentBlock?.dataset.nodeId) {
+    if (!id) {
         throw new Error("No valid block ID found");
     }
 
     try {
-        const blockId = currentBlock.dataset.nodeId;
-        const link = await openDialog() as string;
+        const link = (await openDialog()) as string;
 
-        if (!link) {
-            throw new Error("No link provided");
+        if (!link || !regexp.url.test(link)) {
+            return;
         }
 
-        // Update block DOM
-        const dom = await addBookmark({ link });
-        const updateResult = await updateBlock("dom", dom, blockId);
-
-        if (!updateResult) {
-            throw new Error("Failed to update block");
+        try {
+            await convertToBookmarkCard(id, link);
+        } catch (error) {
+            logError("Error converting to oembed:", error);
         }
-        logSuccess("Block update");
-
-        // Set block attributes
-        const attributeResult = setBlockAttrs(blockId, {
-            "data-node-oembedOriginalUrl": link as string,
-        });
-
-        if (attributeResult) {
-            logSuccess("Block attributes update");
-        } else {
-            logError("Block attributes update", "failed")
-        }
-
     } catch (error) {
         logError("bookmark update", error);
+        throw error; // Re-throw to allow caller to handle the error
+    }
+};
+
+export const convertToBookmarkCard = async (
+    id: string,
+    link: string
+): Promise<void> => {
+    if (!id || !link) return;
+
+    try {
+        const dom = await generateBookmarkCard({ link });
+        if (!dom) return;
+
+        const success = await updateBlock("dom", dom, id);
+
+        if (!success) {
+            throw new Error("Failed to update block");
+        }
+
+        await setBlockAttrs(id, {"data-node-oembedOriginalUrl": link,});
+        logSuccess("Block successfully updated with oembed content");
+
+    } catch (error) {
+        logError("Failed to convert block to oembed:", error);
         throw error; // Re-throw to allow caller to handle the error
     }
 };
@@ -692,12 +569,13 @@ export const convertToOembed = async (
         const wrappedHtml = wrapInDiv(html);
         const success = await updateBlock("dom", wrappedHtml, id);
 
-        if (success) {
-            await setBlockAttrs(id, {
-                "data-node-oembedOriginalUrl": link,
-            });
-            logSuccess("Block successfully updated with oembed content");
+        if (!success) {
+            throw new Error("Failed to update block");
         }
+
+        await setBlockAttrs(id, { "data-node-oembedOriginalUrl": link });
+        logSuccess("Block successfully updated with oembed content");
+
     } catch (error) {
         logError("Failed to convert block to oembed:", error);
         throw error; // Re-throw to allow caller to handle the error
@@ -717,8 +595,8 @@ export const toggleOembed = async (protyle: Protyle): Promise<void> => {
     try {
         const link = (await openDialog()) as string;
 
-        if (!link) {
-            throw new Error("No link provided");
+        if (!link || !regexp.url.test(link)) {
+            return;
         }
 
         try {
@@ -755,7 +633,7 @@ export const processSelectedBlocks = async (
                 }
                     // if it has the custom tag (data-node-oembedoriginalurl) then toggle back to regular url
 
-                if (!link) {
+                if (!link || !regexp.url.test(link)) {
                     return;
                 }
 
@@ -774,31 +652,4 @@ export const processSelectedBlocks = async (
     } catch (error) {
         logError("Error processing blocks:", error);
     }
-};
-
-// Specific processors
-export const oembedProcessor = async (id: string, link: string) => {
-    await convertToOembed(id, link);
-};
-
-export const bookmarkProcessor = async (id: string, link: string) => {
-    try {
-        const dom = await addBookmark({ link });
-        const updateResult = await updateBlock("dom", dom, id);
-
-        if (!updateResult) {
-            throw new Error("Failed to update block");
-        }
-        logSuccess("Block update");
-
-        // Set block attributes
-        await setBlockAttrs(id, {
-            "data-node-oembedOriginalUrl": link,
-        });
-        logSuccess("Block attributes update");
-
-    } catch (error) {
-        logError("Error processing bookmark:", error);
-    }
-
 };

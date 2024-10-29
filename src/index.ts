@@ -24,7 +24,7 @@ import {
 import { hasClosestBlock, hasClosestByAttribute } from "./utils/hasClosest";
 import { getOembed } from "./oembed";
 import {
-    addBookmark,
+    generateBookmarkCard,
     bookmarkAsString,
     convertToOembed,
     escapeHtml,
@@ -45,9 +45,7 @@ import {
     logSuccess,
     logError,
     getSelectedBlocks,
-    processSelectedBlocks,
-    oembedProcessor,
-    bookmarkProcessor,
+    processSelectedBlocks
 } from "@/utils/utils";
 import "@/index.scss";
 import { getBlockByID, insertBlock, setBlockAttrs, updateBlock } from "@/api";
@@ -234,33 +232,14 @@ export default class OembedPlugin extends Plugin {
         });
     }
 
-    private createBlockHandler(blockElements: HTMLElement[]) {
-        return async () => {
-            try {
-                const promises = blockElements.map(
-                    async (item: HTMLElement) => {
-                        const id = item?.dataset.nodeId;
-                        const link = extractUrlFromBlock(item);
-                        if (link) {
-                            await convertToOembed(id, link);
-                        }
-                    }
-                );
-                await Promise.all(promises);
-            } catch (error) {
-                console.error("Error converting to oembed:", error);
-            }
-        };
-    }
-
     private attachClickHandler(
         template: BlockIconTemplate,
         blockElements: HTMLElement[]
     ): IMenuItemOption {
         return {
             ...template,
-            click: () => {
-                this.createBlockHandler(blockElements)();
+            click: async () => {
+                await processSelectedBlocks(blockElements, template.handler);
             },
         };
     }

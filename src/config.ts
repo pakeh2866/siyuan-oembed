@@ -1,4 +1,4 @@
-import { bookmarkProcessor, getBlocks, oembedProcessor, processSelectedBlocks, toggleBookmarkCard, toggleOembed } from "./utils/utils";
+import { convertToBookmarkCard, convertToOembed, getBlocks, processSelectedBlocks, toggleBookmarkCard, toggleOembed } from "./utils/utils";
 import { Protyle } from "siyuan";
 
 import { i18n } from "./i18n";
@@ -7,6 +7,7 @@ export interface BlockIconTemplate {
     id: string;
     icon: string;
     label: string;
+    handler: (id: string, link: string) => Promise<void>;
 }
 
 export const SlashCommandTemplates = {
@@ -28,38 +29,40 @@ export const SlashCommandTemplates = {
 
 export const ToolbarCommandsTemplates = {
     oembed: {
-        name: "insert-oembed",
+        name: "toggle-oembed",
         icon: "iconOembed",
         hotkey: "⇧⌘O",
         tipPosition: "n",
         tip: i18n.toggleOembed,
         click: async (protyle: Protyle) => {
             const selectedBlock = getBlocks(protyle);
-            await processSelectedBlocks(selectedBlock, oembedProcessor);
+            await processSelectedBlocks(selectedBlock, convertToOembed);
         },
     },
     bookmarkCard: {
-        name: "insert-bookmarkCard",
+        name: "toggle-bookmarkCard",
         icon: "iconLink",
         hotkey: "⇧⌘K",
         tipPosition: "n",
         tip: i18n.toggleBookmarkCard,
         click: async (protyle: Protyle) => {
             const selectedBlock = getBlocks(protyle);
-            await processSelectedBlocks(selectedBlock,bookmarkProcessor);
+            await processSelectedBlocks(selectedBlock, convertToBookmarkCard);
         },
     },
 };
 
 export const createBlockIconConfig = (): BlockIconTemplate[] => [
     {
-        id: "oembed",
+        id: "toggle-oembed",
         icon: "iconOembed",
         label: i18n.toggleOembed,
+        handler: convertToOembed,
     },
     {
-        id: "bookmarkCard",
+        id: "toggle-bookmarkCard",
         icon: "iconLink",
         label: i18n.toggleBookmarkCard,
+        handler: convertToBookmarkCard,
     },
 ];
