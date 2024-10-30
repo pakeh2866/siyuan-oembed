@@ -672,7 +672,7 @@ export const processSelectedBlocks = async (
 
                         const success = await updateBlock(
                             "markdown",
-                            `[${originalLink}](${originalLink})`,
+                            `[${await fetchUrlTitle(originalLink)}](${originalLink})`,
                             id
                         );
                         if (!success) {
