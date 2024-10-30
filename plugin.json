@@ -40,6 +40,9 @@
     "plugin",
     "oembed",
     "siyuan",
-    "twitter"
+    "twitter",
+    "metadata",
+    "bookmark",
+    "cards"
   ]
 }
