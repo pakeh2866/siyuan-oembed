@@ -1,16 +1,16 @@
-import { resolve } from "path"
-import { defineConfig, loadEnv } from "vite"
-import { viteStaticCopy } from "vite-plugin-static-copy"
-import livereload from "rollup-plugin-livereload"
-import { svelte } from "@sveltejs/vite-plugin-svelte"
+import { resolve } from "path";
+import { defineConfig, loadEnv } from "vite";
+import { viteStaticCopy } from "vite-plugin-static-copy";
+import livereload from "rollup-plugin-livereload";
+import { svelte } from "@sveltejs/vite-plugin-svelte";
 import zipPack from "vite-plugin-zip-pack";
-import fg from 'fast-glob';
+import fg from "fast-glob";
 
-import vitePluginYamlI18n from './yaml-plugin';
+import vitePluginYamlI18n from "./yaml-plugin";
 
 const env = process.env;
-const isSrcmap = env.VITE_SOURCEMAP === 'inline';
-const isDev = env.NODE_ENV === 'development';
+const isSrcmap = env.VITE_SOURCEMAP === "inline";
+const isDev = env.NODE_ENV === "development";
 
 const outputDir = isDev ? "dev" : "dist";
 
@@ -19,18 +19,26 @@ console.log("isSrcmap=>", isSrcmap);
 console.log("outputDir=>", outputDir);
 
 export default defineConfig({
+    css: {
+        preprocessorOptions: {
+            scss: {
+                api: "modern-compiler", // or "modern", "legacy"
+            },
+        },
+    },
+
     resolve: {
         alias: {
             "@": resolve(__dirname, "src"),
-        }
+        },
     },
 
     plugins: [
         svelte(),
 
         vitePluginYamlI18n({
-            inDir: 'public/i18n',
-            outDir: `${outputDir}/i18n`
+            inDir: "public/i18n",
+            outDir: `${outputDir}/i18n`,
         }),
 
         viteStaticCopy({
@@ -38,21 +46,21 @@ export default defineConfig({
                 { src: "./README*.md", dest: "./" },
                 { src: "./plugin.json", dest: "./" },
                 { src: "./preview.png", dest: "./" },
-                { src: "./icon.png", dest: "./" }
+                { src: "./icon.png", dest: "./" },
             ],
         }),
     ],
 
     define: {
         "process.env.DEV_MODE": JSON.stringify(isDev),
-        "process.env.NODE_ENV": JSON.stringify(env.NODE_ENV)
+        "process.env.NODE_ENV": JSON.stringify(env.NODE_ENV),
     },
 
     build: {
         outDir: outputDir,
         emptyOutDir: false,
         minify: true,
-        sourcemap: isSrcmap ? 'inline' : false,
+        sourcemap: isSrcmap ? "inline" : false,
 
         lib: {
             entry: resolve(__dirname, "src/index.ts"),
@@ -61,28 +69,26 @@ export default defineConfig({
         },
         rollupOptions: {
             plugins: [
-                ...(isDev ? [
-                    livereload(outputDir),
-                    {
-                        name: 'watch-external',
-                        async buildStart() {
-                            const files = await fg([
-                                'public/i18n/**',
-                                './README*.md',
-                                './plugin.json'
-                            ]);
-                            for (let file of files) {
-                                this.addWatchFile(file);
-                            }
-                        }
-                    }
-                ] : [
-                    zipPack({
-                        inDir: './dist',
-                        outDir: './',
-                        outFileName: 'package.zip'
-                    })
-                ])
+                ...(isDev
+                    ? [
+                        livereload(outputDir),
+                        {
+                            name: "watch-external",
+                            async buildStart() {
+                                const files = await fg(["public/i18n/**", "./README*.md", "./plugin.json"]);
+                                for (let file of files) {
+                                    this.addWatchFile(file);
+                                }
+                            },
+                        },
+                    ]
+                    : [
+                        zipPack({
+                            inDir: "./dist",
+                            outDir: "./",
+                            outFileName: "package.zip",
+                        }),
+                    ]),
             ],
 
             external: ["siyuan", "process"],
@@ -91,11 +97,11 @@ export default defineConfig({
                 entryFileNames: "[name].js",
                 assetFileNames: (assetInfo) => {
                     if (assetInfo.name === "style.css") {
-                        return "index.css"
+                        return "index.css";
                     }
-                    return assetInfo.name
+                    return assetInfo.name;
                 },
             },
         },
-    }
-})
+    },
+});
