@@ -1,7 +1,7 @@
 import getOembed from "@/oembed";
 import { Dialog, IOperation, IProtyle, Protyle, showMessage } from "siyuan";
 import { svelteDialog, inputDialog, inputDialogSync } from "@/libs/dialog";
-import { getBlockAttrs, setBlockAttrs, updateBlock } from "@/api";
+import { forwardProxy, getBlockAttrs, setBlockAttrs, updateBlock } from "@/api";
 import { i18n } from "@/i18n";
 import OembedPlugin from "../.";
 import { defaultBookmarkCardStyle, CUSTOM_ATTRIBUTE } from "@/const";
@@ -678,3 +678,71 @@ export const isOembedLink = async (blockId: string): Promise<boolean> => {
     const attrs = await getBlockAttrs(blockId);
     return !!(attrs?.[CUSTOM_ATTRIBUTE] && attrs[CUSTOM_ATTRIBUTE].trim() !== '');
 }
+
+function getUrlFinalSegment(url: string): string {
+    try {
+        const segments = new URL(url).pathname.split("/");
+        const last = segments.pop() || segments.pop(); // Handle potential trailing slash
+        return last;
+    } catch (_) {
+        return "File";
+    }
+}
+
+function blank(text: string): boolean {
+    return text === undefined || text === null || text === "";
+}
+
+function notBlank(text: string): boolean {
+    return !blank(text);
+}
+
+export const fetchUrlTitle = async (url: string): Promise<string> => {
+    if (!(url.startsWith("http") || url.startsWith("https"))) {
+        url = "https://" + url;
+    }
+    try {
+        let data = await forwardProxy(
+            url,
+            "GET",
+            null,
+            [
+                {
+                    "User-Agent":
+                        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36",
+                },
+            ],
+            5000,
+            "text/html"
+        );
+        if (!data || data.status !== 200) {
+            return "";
+        }
+
+        data.headers["Content-Type"].forEach((ele) => {
+            if (!ele.includes("text/html")) {
+                return getUrlFinalSegment(url);
+            }
+        });
+        let html = data?.body;
+
+        const doc = new DOMParser().parseFromString(html, "text/html");
+        const title = doc.querySelectorAll("title")[0];
+
+        if (title == null || blank(title?.innerText)) {
+            // If site is javascript based and has a no-title attribute when unloaded, use it.
+            var noTitle = title?.getAttribute("no-title");
+            if (notBlank(noTitle)) {
+                return noTitle;
+            }
+
+            // Otherwise if the site has no title/requires javascript simply return Title Unknown
+            return "";
+        }
+
+        return title.innerText.replace(/(\r\n|\n|\r)/gm, "").trim();
+    } catch (ex) {
+        console.error(ex);
+        return "";
+    }
+};

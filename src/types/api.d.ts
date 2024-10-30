@@ -54,7 +54,7 @@ interface IResForwardProxy {
     body: string;
     contentType: string;
     elapsed: number;
-    headers: { [key: string]: string };
+    headers: Array<{ key: string; value: string }>;
     status: number;
     url: string;
 }
@@ -62,4 +62,3 @@ interface IResForwardProxy {
 interface IResExportResources {
     path: string;
 }
-
