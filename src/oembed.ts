@@ -81,7 +81,10 @@ export const getOembed = async (urlString: string ): Promise<string> => {
 
         const {provider, endpoint} = result
 
-        const url = new URL(endpoint)
+        const url = new URL(endpoint.includes("{format}")
+            ? endpoint.replace("{format}", "json")
+            : endpoint);
+
         url.searchParams.set('url', urlString)
 
         const config = oembedConfig({ url: urlString, provider });
