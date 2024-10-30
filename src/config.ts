@@ -42,7 +42,7 @@ export const ToolbarCommandsTemplates = {
     bookmarkCard: {
         name: "toggle-bookmarkCard",
         icon: "iconLink",
-        hotkey: "⇧⌘K",
+        hotkey: "⇧⌘C",
         tipPosition: "n",
         tip: i18n.toggleBookmarkCard,
         click: async (protyle: Protyle) => {
