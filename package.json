@@ -24,6 +24,7 @@
     "glob": "^10.0.0",
     "js-yaml": "^4.1.0",
     "minimist": "^1.2.8",
+    "open-graph-scraper-lite": "^2.1.0",
     "rollup-plugin-livereload": "^2.0.5",
     "sass": "^1.63.3",
     "siyuan": "1.0.4",

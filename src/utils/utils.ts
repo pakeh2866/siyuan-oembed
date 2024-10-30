@@ -5,6 +5,7 @@ import { forwardProxy, getBlockAttrs, setBlockAttrs, updateBlock } from "@/api";
 import { i18n } from "@/i18n";
 import OembedPlugin from "../.";
 import { defaultBookmarkCardStyle, CUSTOM_ATTRIBUTE } from "@/const";
+import getURLMetadata from "./URLMetadata";
 
 export let plugin: OembedPlugin;
 export function setPlugin(_plugin: any) {
@@ -403,52 +404,85 @@ export const generateBookmarkCard = async (config?: LinkData) => {
         if (config) {
             Object.assign(conf, config);
         }
+        const missingProps = [
+            "title",
+            "description",
+            "icon",
+            "author",
+            "thumbnail",
+            "publisher",
+        ].filter((prop) => !conf[prop as keyof typeof conf]);
+        console.log("🚀 ~ file: utils.ts:415 ~ generateBookmarkCard ~ missingProps:", missingProps)
+
+        if (missingProps.length > 0) {
+            try {
+                const fetchedData = await getURLMetadata(conf.link);
+                console.log("🚀 ~ file: utils.ts:420 ~ generateBookmarkCard ~ fetchedData:", fetchedData)
+                if (!fetchedData) return;
+                missingProps.forEach((prop) => {
+                    if (!conf.title && prop === "title")
+                        conf.title = fetchedData.title;
+                    if (!conf.description && prop === "description")
+                        conf.description = fetchedData.description;
+                    if (!conf.icon && prop === "icon")
+                        conf.icon = fetchedData.icon;
+                    if (!conf.author && prop === "author")
+                        conf.author = fetchedData.author;
+                    if (!conf.thumbnail && prop === "thumbnail")
+                        conf.thumbnail = fetchedData.thumbnail;
+                    if (!conf.publisher && prop === "publisher")
+                        conf.publisher = fetchedData.publisher;
+                });
+                console.log("🚀 ~ file: utils.ts:407 ~ generateBookmarkCard ~ conf:", conf)
+            } catch (error) {
+                logError(
+                    "Failed to fetch metadata for link",
+                    error
+                );
+            }
+        }
         try {
             if (conf.link) {
-                const newConf = await microlinkScraper(conf.link);
-                if (!newConf) return
-                const {
-                    url,
-                    title,
-                    image,
-                    logo,
-                    description,
-                    author,
-                    publisher,
-                } = newConf;
+                // const newConf = await microlinkScraper(conf.link);
+                // if (!newConf) return
+
+                // const {
+                //     url,
+                //     title,
+                //     image,
+                //     logo,
+                //     description,
+                //     author,
+                //     publisher,
+                // } = newConf;
                 return `${defaultBookmarkCardStyle}
                             <main class="kg-card-main">
                                 <div class="w-full">
                                     <div class="kg-card kg-bookmark-card">
-                                        <a class="kg-bookmark-container" href="${
-                                            conf.link || url
-                                        }"
+                                        <a class="kg-bookmark-container" href="${conf.link}"
                                             ><div class="kg-bookmark-content">
-                                                <div class="kg-bookmark-title">${
-                                                    conf.title || title
-                                                }</div>
-                                                <div class="kg-bookmark-description">${
-                                                    conf.description ||
-                                                    description
-                                                }</div>
+                                                <div class="kg-bookmark-title">${conf.title}</div>
+                                                <div class="kg-bookmark-description">${conf.description || ""}</div>
                                                 <div class="kg-bookmark-metadata">
-                                                    <img class="kg-bookmark-icon" src="${
-                                                        conf.icon || logo
-                                                    }" alt="Link icon" />
-                                                    <span class="kg-bookmark-author">${
-                                                        conf.author || author
-                                                    }</span>
-                                                    <span class="kg-bookmark-publisher">${
-                                                        conf.publisher ||
-                                                        publisher
-                                                    }</span>
+                                                    <img class="kg-bookmark-icon" src="${conf.icon}" alt="Link icon" />
+                                                    ${
+                                                        conf.author &&
+                                                        `<span class="kg-bookmark-author">${conf.author || ""}</span>`
+                                                    }
+                                                    ${
+                                                        conf.publisher &&
+                                                        `<span class="kg-bookmark-publisher">${
+                                                            conf.publisher || ""
+                                                        }</span>`
+                                                    }
                                                 </div>
                                             </div>
-                                            <div class="kg-bookmark-thumbnail">
-                                                <img src="${
-                                                    conf.thumbnail || image
-                                                }" alt="Link thumbnail" />
-                                            </div>
+                                            ${
+                                                conf.publisher &&
+                                                `<div class="kg-bookmark-thumbnail">
+                                                <img src="${conf.thumbnail || ""}" alt="Link thumbnail" />
+                                            </div>`
+                                            }
                                         </a>
                                     </div>
                                 </div>
@@ -679,7 +713,7 @@ export const isOembedLink = async (blockId: string): Promise<boolean> => {
     return !!(attrs?.[CUSTOM_ATTRIBUTE] && attrs[CUSTOM_ATTRIBUTE].trim() !== '');
 }
 
-function getUrlFinalSegment(url: string): string {
+export const getUrlFinalSegment = (url: string): string => {
     try {
         const segments = new URL(url).pathname.split("/");
         const last = segments.pop() || segments.pop(); // Handle potential trailing slash
@@ -689,11 +723,11 @@ function getUrlFinalSegment(url: string): string {
     }
 }
 
-function blank(text: string): boolean {
+export const blank = (text: string): boolean => {
     return text === undefined || text === null || text === "";
 }
 
-function notBlank(text: string): boolean {
+export const notBlank = (text: string): boolean => {
     return !blank(text);
 }
 
