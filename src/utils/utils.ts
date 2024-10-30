@@ -355,7 +355,7 @@ except for when immediately preceeded by a heading */
             `;
 };
 
-export const microlinkScraper = async (url) => {
+export const microlinkScraper = async (url: string) => {
     if (!regexp.url.test(url)) return;
     return fetch(`https://api.microlink.io/?url=${encodeURI(url)}`)
         .then((res) => {
@@ -382,6 +382,37 @@ export const microlinkScraper = async (url) => {
             };
         });
     }
+
+export const screenshotScraper = async (
+    url: string,
+    overlay: string = "dark",
+    background: string = "linear-gradient(225deg, #FF057C 0%, #8D0B93 50%, #321575 100%)"
+) => {
+    if (!regexp.url.test(url)) return;
+    return fetch(
+        `https://api.microlink.io/?url=${encodeURI(url)}&overlay.browser=${encodeURI(
+            overlay
+        )}&overlay.background=${encodeURI(background)}&screenshot=true&embed=screenshot.url`
+    )
+        .then((res) => {
+            if (res.ok) {
+                return res.json();
+            }
+            return null;
+        })
+        .then((data) => {
+            return {
+                title: data.data.title,
+                description: data.data.description,
+                url: url,
+                logo: data.data.logo ? data.data.logo.url : "",
+                image: data.data.image ? data.data.image.url : data.data.logo ? data.data.logo.url : "",
+                author: data.data.author,
+                publisher: data.data.publisher,
+                screenshot: data.data.screenshot ? data.data.screenshot.url : "",
+            };
+        });
+};
 
 export const wrapInDiv = (input: string): string => {
     return `<div>${input}</div>`;
