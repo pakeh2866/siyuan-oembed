@@ -412,8 +412,8 @@ export const logSuccess = (operation: string) =>
 export const logError = (operation: string, error: unknown) =>
     console.error(`Error during ${operation}:`, error);
 
-export const toggleBookmarkCard = async (): Promise<void> => {
-    // protyle.insert(window.Lute.Caret);
+export const toggleBookmarkCard = async (protyle: Protyle): Promise<void> => {
+    protyle.insert(window.Lute.Caret);
 
     const currentBlock = getCurrentBlock();
     const id = currentBlock.dataset.nodeId;
@@ -496,8 +496,8 @@ export const convertToOembed = async (
     }
 };
 
-export const toggleOembed = async (): Promise<void> => {
-    // protyle.insert(window.Lute.Caret);
+export const toggleOembed = async (protyle: Protyle): Promise<void> => {
+    protyle.insert(window.Lute.Caret);
 
     const currentBlock = getCurrentBlock();
     const id = currentBlock.dataset.nodeId;
