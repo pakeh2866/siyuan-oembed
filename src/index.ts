@@ -1,59 +1,24 @@
 import {
     Plugin,
     showMessage,
-    confirm,
     Dialog,
     Menu,
-    openTab,
-    adaptHotkey,
     getFrontend,
-    getBackend,
     IModel,
-    Protyle,
-    openWindow,
-    IOperation,
-    Constants,
-    openMobileFileById,
-    lockScreen,
-    ICard,
-    ICardData,
+    // Constants,
     IMenuItemOption,
-    IToolbarItem,
-    Lute
 } from "siyuan";
-import { hasClosestBlock, hasClosestByAttribute } from "./utils/hasClosest";
-import { getOembed } from "./oembed";
 import {
-    generateBookmarkCard,
-    convertToOembed,
-    escapeHtml,
-    genHtmlBlock,
-    getAll,
-    getCurrentBlock,
-    isEmptyParagraphBlock,
-    isHTMLBlock,
-    isParagraphBlock,
-    LinkData,
-    microlinkScraper,
-    wrapInDiv,
-    extractUrlFromBlock,
-    toggleBookmarkCard,
     setPlugin,
-    openDialog,
-    toggleOembed,
-    logSuccess,
-    logError,
-    getSelectedBlocks,
     processSelectedBlocks
 } from "@/utils/utils";
 import "@/index.scss";
-import { getBlockByID, insertBlock, setBlockAttrs, updateBlock } from "@/api";
 
-import HelloExample from "@/hello.svelte";
+// import HelloExample from "@/hello.svelte";
 import SettingExample from "@/setting-example.svelte";
 
 import { SettingUtils } from "./libs/setting-utils";
-import { svelteDialog, inputDialog, inputDialogSync } from "./libs/dialog";
+// import { svelteDialog } from "./libs/dialog";
 import { BlockIconTemplate, createBlockIconConfig, SlashCommandTemplates, ToolbarCommandsTemplates } from "./config";
 import { builtinEditTools, STORAGE_NAME } from "./const";
 
@@ -66,32 +31,20 @@ export default class OembedPlugin extends Plugin {
         setPlugin(this);
     }
 
-    private handlePaste({ detail }: any) {
-        console.log("🚀 ~ OembedPlugin ~ handlePaste ~ detail:", detail);
-        console.log(
-            "🚀 ~ OembedPlugin ~ handlePaste ~ detail.textPlain:",
-            detail.textPlain
-        );
-    }
-
-    private handleLink({ detail }: any) {
-        console.log("🚀 ~ OembedPlugin ~ handleLink ~ detail:", detail);
-    }
-
-    private showDialog() {
-        svelteDialog({
-            title: `SiYuan ${Constants.SIYUAN_VERSION}`,
-            width: this.isMobile ? "92vw" : "720px",
-            constructor: (container: HTMLElement) => {
-                return new HelloExample({
-                    target: container,
-                    props: {
-                        app: this.app,
-                    },
-                });
-            },
-        });
-    }
+    // private showDialog() {
+    //     svelteDialog({
+    //         title: `SiYuan ${Constants.SIYUAN_VERSION}`,
+    //         width: this.isMobile ? "92vw" : "720px",
+    //         constructor: (container: HTMLElement) => {
+    //             return new HelloExample({
+    //                 target: container,
+    //                 props: {
+    //                     app: this.app,
+    //                 },
+    //             });
+    //         },
+    //     });
+    // }
 
     async onload() {
         this.init();
@@ -220,16 +173,16 @@ export default class OembedPlugin extends Plugin {
         });
     }
 
-    private eventBusPaste(event: any) {
-        // 如果需异步处理请调用 preventDefault， 否则会进行默认处理
-        event.preventDefault();
-        // 如果使用了 preventDefault，必须调用 resolve，否则程序会卡死
-        console.log(event);
-        // TODO: catch pasted link and make an oembed instead
-        event.detail.resolve({
-            textPlain: event.detail.textPlain.trim(),
-        });
-    }
+    // private eventBusPaste(event: any) {
+    //     // 如果需异步处理请调用 preventDefault， 否则会进行默认处理
+    //     event.preventDefault();
+    //     // 如果使用了 preventDefault，必须调用 resolve，否则程序会卡死
+    //     console.log(event);
+    //     // TODO: catch pasted link and make an oembed instead
+    //     event.detail.resolve({
+    //         textPlain: event.detail.textPlain.trim(),
+    //     });
+    // }
 
     private attachClickHandler(
         template: BlockIconTemplate,

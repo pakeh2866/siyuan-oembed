@@ -1,7 +1,7 @@
-import { convertToBookmarkCard, convertToOembed, getAllProtyles, getBlocks, processSelectedBlocks, toggleBookmarkCard, toggleOembed } from "./utils/utils";
-import { IProtyle, Protyle } from "siyuan";
+import { convertToBookmarkCard, convertToOembed, processSelectedBlocks, toggleBookmarkCard, toggleOembed } from "@/utils/utils";
 
 import { i18n } from "./i18n";
+import { getBlocks } from "./utils/block";
 
 export interface BlockIconTemplate {
     id: string;
@@ -35,8 +35,7 @@ export const ToolbarCommandsTemplates = {
         tipPosition: "n",
         tip: i18n.toggleOembed,
         click: async () => {
-            const selectedBlock = getBlocks();
-            await processSelectedBlocks(selectedBlock, convertToOembed);
+            await processSelectedBlocks(getBlocks(), convertToOembed);
         },
     },
     bookmarkCard: {
@@ -46,8 +45,7 @@ export const ToolbarCommandsTemplates = {
         tipPosition: "n",
         tip: i18n.toggleBookmarkCard,
         click: async () => {
-            const selectedBlock = getBlocks();
-            await processSelectedBlocks(selectedBlock, convertToBookmarkCard);
+            await processSelectedBlocks(getBlocks(), convertToBookmarkCard);
         },
     },
 };

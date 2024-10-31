@@ -1,26 +1,9 @@
-export interface LinkData {
-    title: string;
-    description: string;
-    icon: string;
-    author: string;
-    link: string;
-    thumbnail: string;
-    publisher: string;
-}
-
 import ogs from "open-graph-scraper-lite";
 import { forwardProxy } from '@/api';
-import { getUrlFinalSegment, logError } from './utils';
-
-export interface LinkData {
-    title: string;
-    description: string;
-    icon: string;
-    author: string;
-    link: string;
-    thumbnail: string;
-    publisher: string;
-}
+import { getUrlFinalSegment } from './strings';
+import { LinkData } from "@/types/utils";
+import { logError } from "@/utils/logger";
+import { regexp } from "./strings";
 
 export const getURLMetadata = async (
     url: string
@@ -142,4 +125,55 @@ export const getURLMetadata = async (
     }
 };
 
-export default getURLMetadata;
+export const microlinkScraper = async (url: string) => {
+    if (!regexp.url.test(url)) return;
+    return fetch(`https://api.microlink.io/?url=${encodeURI(url)}`)
+        .then((res) => {
+            if (res.ok) {
+                return res.json();
+            }
+            return null;
+        })
+        .then((data) => {
+            return {
+                title: data.data.title,
+                description: data.data.description,
+                url: url,
+                logo: data.data.logo ? data.data.logo.url : "",
+                image: data.data.image ? data.data.image.url : data.data.logo ? data.data.logo.url : "",
+                author: data.data.author,
+                publisher: data.data.publisher,
+            };
+        });
+};
+
+export const screenshotScraper = async (
+    url: string,
+    overlay: string = "dark",
+    background: string = "linear-gradient(225deg, #FF057C 0%, #8D0B93 50%, #321575 100%)"
+) => {
+    if (!regexp.url.test(url)) return;
+    return fetch(
+        `https://api.microlink.io/?url=${encodeURI(url)}&overlay.browser=${encodeURI(
+            overlay
+        )}&overlay.background=${encodeURI(background)}&screenshot=true&embed=screenshot.url`
+    )
+        .then((res) => {
+            if (res.ok) {
+                return res.json();
+            }
+            return null;
+        })
+        .then((data) => {
+            return {
+                title: data.data.title,
+                description: data.data.description,
+                url: url,
+                logo: data.data.logo ? data.data.logo.url : "",
+                image: data.data.image ? data.data.image.url : data.data.logo ? data.data.logo.url : "",
+                author: data.data.author,
+                publisher: data.data.publisher,
+                screenshot: data.data.screenshot ? data.data.screenshot.url : "",
+            };
+        });
+};

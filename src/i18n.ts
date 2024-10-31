@@ -17,17 +17,6 @@ for (const path in languageModules) {
     }
 }
 
-// // Type declaration for window.siyuan
-// declare global {
-//     interface Window {
-//         siyuan: {
-//             config: {
-//                 lang: string;
-//             };
-//         };
-//     }
-// }
-
 // Get the current language with proper typing
 const getCurrentLanguage = (): I18nLanguage => {
     const currentLang = window.siyuan.config.lang;
