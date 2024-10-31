@@ -8,10 +8,6 @@ import {
     // Constants,
     IMenuItemOption,
 } from "siyuan";
-import {
-    setPlugin,
-    processSelectedBlocks
-} from "@/utils/utils";
 import "@/index.scss";
 
 // import HelloExample from "@/hello.svelte";
@@ -21,6 +17,12 @@ import { SettingUtils } from "./libs/setting-utils";
 // import { svelteDialog } from "./libs/dialog";
 import { BlockIconTemplate, createBlockIconConfig, SlashCommandTemplates, ToolbarCommandsTemplates } from "./config";
 import { builtinEditTools, STORAGE_NAME } from "./const";
+import { processSelectedBlocks } from "./convert";
+
+export let plugin: OembedPlugin;
+export function setPlugin(_plugin: any) {
+    plugin = _plugin;
+}
 
 export default class OembedPlugin extends Plugin {
     customTab: () => IModel;

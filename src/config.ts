@@ -1,5 +1,4 @@
-import { convertToBookmarkCard, convertToOembed, processSelectedBlocks, toggleBookmarkCard, toggleOembed } from "@/utils/utils";
-
+import { convertToBookmarkCard, convertToOembed, processSelectedBlocks, toggleBookmarkCard, toggleOembed } from "./convert";
 import { i18n } from "./i18n";
 import { getBlocks } from "./utils/block";
 

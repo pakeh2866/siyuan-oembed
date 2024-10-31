@@ -1,80 +1,63 @@
-import getOembed from "@/oembed";
 import { Dialog, Protyle, showMessage } from "siyuan";
-import { forwardProxy, getBlockAttrs, setBlockAttrs, updateBlock } from "@/api";
-import { i18n } from "@/i18n";
-import OembedPlugin from "../.";
-import { defaultBookmarkCardStyle, CUSTOM_ATTRIBUTE } from "@/const";
-import { getURLMetadata } from "./metadata";
-import { LinkData } from "@/types/utils";
-import { logger } from "@/utils/logger";
-import { blank, getUrlFinalSegment, notBlank, regexp, wrapInDiv } from "./strings";
-import { extractUrlFromBlock, focusBlock, getCurrentBlock, getElementByBlockId, isEmptyParagraphBlock } from "./block";
-
-export let plugin: OembedPlugin;
-export function setPlugin(_plugin: any) {
-    plugin = _plugin;
-}
+import { CUSTOM_ATTRIBUTE, defaultBookmarkCardStyle } from "./const";
+import { LinkData } from "./types/utils";
+import { logger } from "./utils/logger";
+import { getURLMetadata } from "./utils/metadata";
+import { i18n } from "./i18n";
+import { extractUrlFromBlock, focusBlock, getCurrentBlock, getElementByBlockId, isEmptyParagraphBlock } from "./utils/block";
+import { blank, getUrlFinalSegment, notBlank, regexp, wrapInDiv } from "./utils/strings";
+import { forwardProxy, getBlockAttrs, setBlockAttrs, updateBlock } from "./api";
+import getOembed from "./oembed";
 
 export const generateBookmarkCard = async (config?: LinkData) => {
-        let conf: LinkData = {
-            title: "",
-            description: "",
-            icon: "",
-            author: "",
-            link: "",
-            thumbnail: "",
-            publisher: "",
-        };
-        if (config) {
-            Object.assign(conf, config);
-        }
-        const missingProps = [
-            "title",
-            "description",
-            "icon",
-            "author",
-            "thumbnail",
-            "publisher",
-        ].filter((prop) => !conf[prop as keyof typeof conf]);
+    let conf: LinkData = {
+        title: "",
+        description: "",
+        icon: "",
+        author: "",
+        link: "",
+        thumbnail: "",
+        publisher: "",
+    };
+    if (config) {
+        Object.assign(conf, config);
+    }
+    const missingProps = ["title", "description", "icon", "author", "thumbnail", "publisher"].filter(
+        (prop) => !conf[prop as keyof typeof conf]
+    );
 
-        if (missingProps.length > 0) {
-            try {
-                const fetchedData = await getURLMetadata(conf.link);
-                logger.debug("getURLMetadata:", { link: conf.link, fetchedData });
-                if (!fetchedData) return;
-                missingProps.forEach((prop) => {
-                    if (!conf.title && prop === "title")
-                        conf.title = fetchedData.title;
-                    if (!conf.description && prop === "description")
-                        conf.description = fetchedData.description;
-                    if (!conf.icon && prop === "icon")
-                        conf.icon = fetchedData.icon;
-                    if (!conf.author && prop === "author")
-                        conf.author = fetchedData.author;
-                    if (!conf.thumbnail && prop === "thumbnail")
-                        conf.thumbnail = fetchedData.thumbnail;
-                    if (!conf.publisher && prop === "publisher")
-                        conf.publisher = fetchedData.publisher;
-                });
-            } catch (error) {
-                logger.error("Failed to fetch metadata for link:", { error });
-            }
-        }
+    if (missingProps.length > 0) {
         try {
-            if (conf.link) {
-                // const newConf = await microlinkScraper(conf.link);
-                // if (!newConf) return
+            const fetchedData = await getURLMetadata(conf.link);
+            logger.debug("getURLMetadata:", { link: conf.link, fetchedData });
+            if (!fetchedData) return;
+            missingProps.forEach((prop) => {
+                if (!conf.title && prop === "title") conf.title = fetchedData.title;
+                if (!conf.description && prop === "description") conf.description = fetchedData.description;
+                if (!conf.icon && prop === "icon") conf.icon = fetchedData.icon;
+                if (!conf.author && prop === "author") conf.author = fetchedData.author;
+                if (!conf.thumbnail && prop === "thumbnail") conf.thumbnail = fetchedData.thumbnail;
+                if (!conf.publisher && prop === "publisher") conf.publisher = fetchedData.publisher;
+            });
+        } catch (error) {
+            logger.error("Failed to fetch metadata for link:", { error });
+        }
+    }
+    try {
+        if (conf.link) {
+            // const newConf = await microlinkScraper(conf.link);
+            // if (!newConf) return
 
-                // const {
-                //     url,
-                //     title,
-                //     image,
-                //     logo,
-                //     description,
-                //     author,
-                //     publisher,
-                // } = newConf;
-                return `<div>
+            // const {
+            //     url,
+            //     title,
+            //     image,
+            //     logo,
+            //     description,
+            //     author,
+            //     publisher,
+            // } = newConf;
+            return `<div>
                             ${defaultBookmarkCardStyle}
                             <main class="kg-card-main">
                                 <div class="w-full">
@@ -86,70 +69,75 @@ export const generateBookmarkCard = async (config?: LinkData) => {
                                                 <div class="kg-bookmark-metadata">
                                                     <img class="kg-bookmark-icon" src="${conf.icon}" alt="Link icon" />
                                                     ${
-                                                        conf.author ?
-                                                        `<span class="kg-bookmark-author">${conf.author || ""}</span>` : ""
+                                                        conf.author
+                                                            ? `<span class="kg-bookmark-author">${
+                                                                  conf.author || ""
+                                                              }</span>`
+                                                            : ""
                                                     }
                                                     ${
-                                                        conf.publisher ?
-                                                        `<span class="kg-bookmark-publisher">${
-                                                            conf.publisher || ""
-                                                        }</span>` : ""
+                                                        conf.publisher
+                                                            ? `<span class="kg-bookmark-publisher">${
+                                                                  conf.publisher || ""
+                                                              }</span>`
+                                                            : ""
                                                     }
                                                 </div>
                                             </div>
                                             ${
-                                                conf.thumbnail ?
-                                                `<div class="kg-bookmark-thumbnail">
+                                                conf.thumbnail
+                                                    ? `<div class="kg-bookmark-thumbnail">
                                                     <img src="${conf.thumbnail || ""}" alt="Link thumbnail" />
-                                                </div>` : ""
+                                                </div>`
+                                                    : ""
                                             }
                                         </a>
                                     </div>
                                 </div>
                             </main>
                         </div>`;
-            }
-        } catch (e) {
-            console.error(e);
-            return;
         }
-    };
+    } catch (e) {
+        console.error(e);
+        return;
+    }
+};
 
 export const openDialog = (args?: {
-        title: string;
-        placeholder?: string;
-        defaultText?: string;
-        confirm?: (text: string) => void;
-        cancel?: () => void;
-        width?: string;
-        height?: string;
-    }) => {
-        return new Promise((resolve, reject) => {
-            const dialog = new Dialog({
-                title: i18n.insertURLDialogTitle,
-                content: `<div class="b3-dialog__content"><textarea class="b3-text-field fn__block" placeholder="Please enter the URL"></textarea></div>
+    title: string;
+    placeholder?: string;
+    defaultText?: string;
+    confirm?: (text: string) => void;
+    cancel?: () => void;
+    width?: string;
+    height?: string;
+}) => {
+    return new Promise((resolve, reject) => {
+        const dialog = new Dialog({
+            title: i18n.insertURLDialogTitle,
+            content: `<div class="b3-dialog__content"><textarea class="b3-text-field fn__block" placeholder="Please enter the URL"></textarea></div>
                     <div class="b3-dialog__action">
                     <button class="b3-button b3-button--cancel">${i18n.cancel}</button><div class="fn__space"></div>
                     <button class="b3-button b3-button--text">${i18n.save}</button>
                     </div>`,
-                width: "520px",
-            });
-            const inputElement = dialog.element.querySelector("textarea");
-            const btnsElement = dialog.element.querySelectorAll(".b3-button");
-            dialog.bindInput(inputElement, () => {
-                (btnsElement[1] as HTMLElement).click();
-            });
-            inputElement.focus();
-            btnsElement[0].addEventListener("click", () => {
-                dialog.destroy();
-                reject();
-            });
-            btnsElement[1].addEventListener("click", () => {
-                dialog.destroy();
-                resolve(inputElement.value);
-            });
+            width: "520px",
         });
-    };
+        const inputElement = dialog.element.querySelector("textarea");
+        const btnsElement = dialog.element.querySelectorAll(".b3-button");
+        dialog.bindInput(inputElement, () => {
+            (btnsElement[1] as HTMLElement).click();
+        });
+        inputElement.focus();
+        btnsElement[0].addEventListener("click", () => {
+            dialog.destroy();
+            reject();
+        });
+        btnsElement[1].addEventListener("click", () => {
+            dialog.destroy();
+            resolve(inputElement.value);
+        });
+    });
+};
 
 export const toggleBookmarkCard = async (protyle: Protyle): Promise<void> => {
     protyle.insert(window.Lute.Caret);
@@ -181,10 +169,7 @@ export const toggleBookmarkCard = async (protyle: Protyle): Promise<void> => {
     }
 };
 
-export const convertToBookmarkCard = async (
-    id: string,
-    link: string,
-): Promise<void> => {
+export const convertToBookmarkCard = async (id: string, link: string): Promise<void> => {
     if (!id || !link) return;
     logger.debug("Converting bookmark for id and link:", { id, link });
 
@@ -201,7 +186,7 @@ export const convertToBookmarkCard = async (
 
         await setBlockAttrs(id, { [CUSTOM_ATTRIBUTE]: link });
         const element = getElementByBlockId(id);
-        logger.debug("Element ID to focus on after converting:", { element});
+        logger.debug("Element ID to focus on after converting:", { element });
         focusBlock(element);
         logger.info("Block successfully updated to bookmark card");
         showMessage("Link converted!");
@@ -211,10 +196,7 @@ export const convertToBookmarkCard = async (
     }
 };
 
-export const convertToOembed = async (
-    id: string,
-    link: string,
-): Promise<void> => {
+export const convertToOembed = async (id: string, link: string): Promise<void> => {
     if (!id || !link) return;
     logger.debug("Converting bookmark for id and link:", { id, link });
 
@@ -273,10 +255,10 @@ export const toggleOembed = async (protyle: Protyle): Promise<void> => {
 };
 
 export const processSelectedBlocks = async (
-    blocks:  HTMLElement[],
+    blocks: HTMLElement[],
     processor: (id: string, link: string) => Promise<void>
 ) => {
-    let link: string = null
+    let link: string = null;
     logger.debug("Processing blocks:", { blocks });
     try {
         const promises = blocks.map(async (item: HTMLElement) => {
@@ -294,7 +276,7 @@ export const processSelectedBlocks = async (
                 else {
                     // check if the block has our custom tag already (CUSTOM_ATTRIBUTE)
                     logger.debug("Block is not empty, checking if this is our link");
-                    const isOembed = await isOembedLink(id)
+                    const isOembed = await isOembedLink(id);
 
                     if (isOembed) {
                         // toggle the link back if it had been previously converted
@@ -314,8 +296,7 @@ export const processSelectedBlocks = async (
                         await setBlockAttrs(id, { [CUSTOM_ATTRIBUTE]: null });
                         const element = getElementByBlockId(id);
                         focusBlock(element);
-                    }
-                    else {
+                    } else {
                         // extract the link from the block
                         link = extractUrlFromBlock(item);
                         logger.debug("Link extracted from block:", { link });
@@ -344,8 +325,8 @@ export const processSelectedBlocks = async (
 
 export const isOembedLink = async (blockId: string): Promise<boolean> => {
     const attrs = await getBlockAttrs(blockId);
-    return !!(attrs?.[CUSTOM_ATTRIBUTE] && attrs[CUSTOM_ATTRIBUTE].trim() !== '');
-}
+    return !!(attrs?.[CUSTOM_ATTRIBUTE] && attrs[CUSTOM_ATTRIBUTE].trim() !== "");
+};
 
 export const fetchUrlTitle = async (url: string): Promise<string> => {
     if (!(url.startsWith("http") || url.startsWith("https"))) {
@@ -396,4 +377,3 @@ export const fetchUrlTitle = async (url: string): Promise<string> => {
         return "";
     }
 };
-export { getUrlFinalSegment };
