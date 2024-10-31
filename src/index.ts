@@ -16,7 +16,7 @@ import SettingExample from "@/setting-example.svelte";
 import { SettingUtils } from "./libs/setting-utils";
 // import { svelteDialog } from "./libs/dialog";
 import { BlockIconTemplate, createBlockIconConfig, SlashCommandTemplates, ToolbarCommandsTemplates } from "./config";
-import { builtinEditTools, STORAGE_NAME } from "./const";
+import { builtinEditTools, STORAGE_NAME } from "@/libs/const";
 import { processSelectedBlocks } from "./convert";
 
 export let plugin: OembedPlugin;

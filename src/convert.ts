@@ -1,5 +1,5 @@
 import { Dialog, Protyle, showMessage } from "siyuan";
-import { CUSTOM_ATTRIBUTE, defaultBookmarkCardStyle } from "./const";
+import { CUSTOM_ATTRIBUTE, defaultBookmarkCardStyle } from "@/libs/const";
 import { LinkData } from "./types/utils";
 import { logger } from "./utils/logger";
 import { getURLMetadata } from "./utils/metadata";
