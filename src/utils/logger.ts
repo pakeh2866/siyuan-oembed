@@ -1,3 +1,5 @@
+import { i18n } from "@/i18n";
+
 export const logSuccess = (operation: string) => console.log(`${operation} completed successfully`);
 
 export const logError = (operation: string, error: unknown) => console.error(`Error during ${operation}:`, error);
@@ -22,20 +24,20 @@ class Logger {
 
     debug(message: string, ...optionalParams: any[]): void {
         if (settings.debug) {
-            console.debug(`[DEBUG] ${message}`, ...optionalParams);
+            console.debug(`[DEBUG][${i18n.name}] ${message}`, ...optionalParams);
         }
     }
 
     info(message: string, ...optionalParams: any[]): void {
-        console.info(`[INFO] ${message}`, ...optionalParams);
+        console.info(`[INFO][${i18n.name}] ${message}`, ...optionalParams);
     }
 
     warn(message: string, ...optionalParams: any[]): void {
-        console.warn(`[WARN] ${message}`, ...optionalParams);
+        console.warn(`[WARN][${i18n.name}] ${message}`, ...optionalParams);
     }
 
     error(message: string, ...optionalParams: any[]): void {
-        console.error(`[ERROR] ${message}`, ...optionalParams);
+        console.error(`[ERROR][${i18n.name}] ${message}`, ...optionalParams);
     }
 }
 
