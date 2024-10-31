@@ -1,13 +1,14 @@
 import { Dialog, Protyle, showMessage } from "siyuan";
 import { CUSTOM_ATTRIBUTE, defaultBookmarkCardStyle } from "@/libs/const";
-import { LinkData } from "./types/utils";
-import { logger } from "./utils/logger";
-import { getURLMetadata } from "./utils/metadata";
+import { LinkData } from "@/types/utils";
+import { logger } from "@/utils/logger";
+import { getURLMetadata } from "@/utils/metadata";
 import { i18n } from "./i18n";
-import { extractUrlFromBlock, focusBlock, getCurrentBlock, getElementByBlockId, isEmptyParagraphBlock } from "./utils/block";
-import { blank, getUrlFinalSegment, notBlank, regexp, wrapInDiv } from "./utils/strings";
+import { extractUrlFromBlock, focusBlock, getCurrentBlock, getElementByBlockId, isEmptyParagraphBlock } from "@/utils/block";
+import { blank, getUrlFinalSegment, notBlank, regexp, wrapInDiv } from "@/utils/strings";
 import { forwardProxy, getBlockAttrs, setBlockAttrs, updateBlock } from "./api";
 import getOembed from "./oembed";
+import { progressStatus } from "@/utils/status";
 
 export const generateBookmarkCard = async (config?: LinkData) => {
     let conf: LinkData = {
@@ -172,6 +173,7 @@ export const toggleBookmarkCard = async (protyle: Protyle): Promise<void> => {
 export const convertToBookmarkCard = async (id: string, link: string): Promise<void> => {
     if (!id || !link) return;
     logger.debug("Converting bookmark for id and link:", { id, link });
+    progressStatus(`Converting ${link}`)
 
     try {
         const dom = await generateBookmarkCard({ link });
@@ -199,6 +201,7 @@ export const convertToBookmarkCard = async (id: string, link: string): Promise<v
 export const convertToOembed = async (id: string, link: string): Promise<void> => {
     if (!id || !link) return;
     logger.debug("Converting bookmark for id and link:", { id, link });
+    progressStatus(`Converting ${link}`);
 
     try {
         const html = await getOembed(link);
