@@ -2,7 +2,6 @@ export const hasClosestByAttribute = (element: Node, attr: string, value: string
     if (!element) {
         return false;
     }
-    console.log("🚀 ~ hasClosestByAttribute ~ element:", element)
     if (element.nodeType === 3) {
         element = element.parentElement;
     }

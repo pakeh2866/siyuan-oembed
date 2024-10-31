@@ -1,5 +1,5 @@
-import { convertToBookmarkCard, convertToOembed, getBlocks, processSelectedBlocks, toggleBookmarkCard, toggleOembed } from "./utils/utils";
-import { Protyle } from "siyuan";
+import { convertToBookmarkCard, convertToOembed, getAllProtyles, getBlocks, processSelectedBlocks, toggleBookmarkCard, toggleOembed } from "./utils/utils";
+import { IProtyle, Protyle } from "siyuan";
 
 import { i18n } from "./i18n";
 
@@ -34,8 +34,8 @@ export const ToolbarCommandsTemplates = {
         hotkey: "⇧⌘O",
         tipPosition: "n",
         tip: i18n.toggleOembed,
-        click: async (protyle: Protyle) => {
-            const selectedBlock = getBlocks(protyle);
+        click: async () => {
+            const selectedBlock = getBlocks();
             await processSelectedBlocks(selectedBlock, convertToOembed);
         },
     },
@@ -45,8 +45,8 @@ export const ToolbarCommandsTemplates = {
         hotkey: "⇧⌘C",
         tipPosition: "n",
         tip: i18n.toggleBookmarkCard,
-        click: async (protyle: Protyle) => {
-            const selectedBlock = getBlocks(protyle);
+        click: async () => {
+            const selectedBlock = getBlocks();
             await processSelectedBlocks(selectedBlock, convertToBookmarkCard);
         },
     },

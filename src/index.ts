@@ -25,7 +25,6 @@ import { hasClosestBlock, hasClosestByAttribute } from "./utils/hasClosest";
 import { getOembed } from "./oembed";
 import {
     generateBookmarkCard,
-    bookmarkAsString,
     convertToOembed,
     escapeHtml,
     genHtmlBlock,

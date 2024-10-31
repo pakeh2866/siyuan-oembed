@@ -1,11 +1,12 @@
 import getOembed from "@/oembed";
 import { Dialog, IOperation, IProtyle, Protyle, showMessage } from "siyuan";
 import { svelteDialog, inputDialog, inputDialogSync } from "@/libs/dialog";
-import { forwardProxy, getBlockAttrs, setBlockAttrs, updateBlock } from "@/api";
+import { forwardProxy, getBlockAttrs, getBlockByID, setBlockAttrs, updateBlock } from "@/api";
 import { i18n } from "@/i18n";
 import OembedPlugin from "../.";
 import { defaultBookmarkCardStyle, CUSTOM_ATTRIBUTE } from "@/const";
 import getURLMetadata from "./URLMetadata";
+import { hasClosestBlock } from "./hasClosest";
 
 export let plugin: OembedPlugin;
 export function setPlugin(_plugin: any) {
@@ -65,8 +66,8 @@ export const isSiyuanBlock = (element: any): boolean => {
     );
 }
 
-export const getBlocks = (protyle: Protyle): HTMLElement[] => {
-    const selectedBlocks = getSelectedBlocks(protyle);
+export const getBlocks = (): HTMLElement[] => {
+    const selectedBlocks = getSelectedBlocks();
 
     // Check if selectedBlocks has elements
     if (selectedBlocks.length > 0) {
@@ -90,11 +91,17 @@ export const getCurrentBlock = (): HTMLElement | null | undefined => {
     return element;
 }
 
-export const getSelectedBlocks = (protyle: Protyle): Array<HTMLElement> => {
-    return [...protyle.protyle.wysiwyg.element.querySelectorAll(
-        ".protyle-wysiwyg--select"
-    )];
+export const getSelectedBlocks = (): Array<HTMLElement> => {
+    return Array.from(getProtyle().querySelectorAll(".protyle-wysiwyg--select")) as HTMLElement[];
 };
+
+export const getProtyle = (): HTMLElement => {
+    return document.querySelector(`.protyle`);
+};
+
+export const getElementByBlockId = (nodeId: string): HTMLElement => {
+    return document.querySelector(`div[data-node-id="${nodeId}"]`);
+}
 
 export const isParagraphBlock = (): boolean=> {
     const selection = document.getSelection();
@@ -194,167 +201,6 @@ export const extractUrlFromBlock = (block: HTMLElement): string | null => {
         : null;
 };
 
-export const bookmarkAsString = (linkData: LinkData): string => {
-  // const data: LinkData = await getURLMetadata(url);
-  return `<div
-    style="
-        border: 1px solid rgb(222, 222, 222);
-        box-shadow: rgba(0, 0, 0, 0.06) 0px 1px 3px;
-    "
-    ><style>
-    .kg-card {
-    font-family:
-        'Inter Variable',
-        ui-sans-serif,
-        system-ui,
-        -apple-system,
-        BlinkMacSystemFont,
-        Segoe UI,
-        Roboto,
-        Helvetica Neue,
-        Arial,
-        Noto Sans,
-        sans-serif,
-        Apple Color Emoji,
-        Segoe UI Emoji,
-        Segoe UI Symbol,
-        Noto Color Emoji;
-    }
-    .kg-card {
-        @extend %font-sans;
-    }
-    .kg-card:not(.kg-callout-card) {
-        font-size: 1rem;
-    }
-    /* Add extra margin before/after any cards,
-except for when immediately preceeded by a heading */
-    .post-body :not(.kg-card):not([id]) + .kg-card {
-        margin-top: 6vmin;
-    }
-    .post-body .kg-card + :not(.kg-card) {
-        margin-top: 6vmin;
-    }
-    .kg-bookmark-card,
-    .kg-bookmark-card * {
-        box-sizing: border-box;
-    }
-    .kg-bookmark-card,
-    .kg-bookmark-publisher {
-        position: relative;
-        /* width: 100%; */
-    }
-    .kg-bookmark-card a.kg-bookmark-container,
-    .kg-bookmark-card a.kg-bookmark-container:hover {
-        display: flex;
-        background: var(--bookmark-background-color);
-        text-decoration: none;
-        border-radius: 6px;
-        border: 1px solid var(--bookmark-border-color);
-        overflow: hidden;
-        color: var(--bookmark-text-color);
-    }
-    .kg-bookmark-content {
-        display: flex;
-        flex-direction: column;
-        flex-grow: 1;
-        flex-basis: 100%;
-        align-items: flex-start;
-        justify-content: flex-start;
-        padding: 20px;
-        overflow: hidden;
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell',
-            'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
-    }
-    .kg-bookmark-title {
-        font-size: 15px;
-        line-height: 1.4em;
-        font-weight: 600;
-    }
-    .kg-bookmark-description {
-        display: -webkit-box;
-        font-size: 14px;
-        line-height: 1.5em;
-        margin-top: 3px;
-        font-weight: 400;
-        max-height: 44px;
-        overflow-y: hidden;
-        opacity: 0.7;
-        -webkit-line-clamp: 2;
-        -webkit-box-orient: vertical;
-    }
-    .kg-bookmark-metadata {
-        display: flex;
-        align-items: center;
-        margin-top: 22px;
-        width: 100%;
-        font-size: 14px;
-        font-weight: 500;
-        white-space: nowrap;
-    }
-    .kg-bookmark-metadata > *:not(img) {
-        opacity: 0.7;
-    }
-    .kg-bookmark-icon {
-        width: 20px;
-        height: 20px;
-        margin-right: 6px;
-    }
-    .kg-bookmark-author,
-    .kg-bookmark-publisher {
-        display: inline;
-    }
-    .kg-bookmark-publisher {
-        text-overflow: ellipsis;
-        overflow: hidden;
-        max-width: 240px;
-        white-space: nowrap;
-        display: block;
-        line-height: 1.65em;
-    }
-    .kg-bookmark-metadata > span:nth-of-type(2) {
-        font-weight: 400;
-    }
-    .kg-bookmark-metadata > span:nth-of-type(2):before {
-        content: '•';
-        margin: 0 6px;
-    }
-    .kg-bookmark-metadata > span:last-of-type {
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-    .kg-bookmark-thumbnail {
-        position: relative;
-        flex-grow: 1;
-        min-width: 33%;
-    }
-    .kg-bookmark-thumbnail img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover; /* or contain */
-        position: absolute;
-        top: 0;
-        left: 0;
-        border-radius: 0 2px 2px 0;
-    }
-</style><div>
-            <figure class="kg-card kg-bookmark-card">
-                <a class="kg-bookmark-container" href="${linkData.link}"
-                    ><div class="kg-bookmark-content">
-                        <div class="kg-bookmark-title">${linkData.title}</div>
-                        <div class="kg-bookmark-description">${linkData.description}</div>
-                        <div class="kg-bookmark-metadata">
-                            <img class="kg-bookmark-icon" src="${linkData.icon}" alt="Link icon" />
-                            <span class="kg-bookmark-author">${linkData.author}</span>
-                            <span class="kg-bookmark-publisher">${linkData.publisher}</span>
-                        </div>
-                    </div><div class="kg-bookmark-thumbnail">
-                                <img src="${linkData.thumbnail}" alt="Link thumbnail" />
-                            </div>
-                </a>
-            </figure></div></div>
-            `;
-};
-
 export const microlinkScraper = async (url: string) => {
     if (!regexp.url.test(url)) return;
     return fetch(`https://api.microlink.io/?url=${encodeURI(url)}`)
@@ -443,12 +289,10 @@ export const generateBookmarkCard = async (config?: LinkData) => {
             "thumbnail",
             "publisher",
         ].filter((prop) => !conf[prop as keyof typeof conf]);
-        console.log("🚀 ~ file: utils.ts:415 ~ generateBookmarkCard ~ missingProps:", missingProps)
 
         if (missingProps.length > 0) {
             try {
                 const fetchedData = await getURLMetadata(conf.link);
-                console.log("🚀 ~ file: utils.ts:420 ~ generateBookmarkCard ~ fetchedData:", fetchedData)
                 if (!fetchedData) return;
                 missingProps.forEach((prop) => {
                     if (!conf.title && prop === "title")
@@ -464,7 +308,6 @@ export const generateBookmarkCard = async (config?: LinkData) => {
                     if (!conf.publisher && prop === "publisher")
                         conf.publisher = fetchedData.publisher;
                 });
-                console.log("🚀 ~ file: utils.ts:407 ~ generateBookmarkCard ~ conf:", conf)
             } catch (error) {
                 logError(
                     "Failed to fetch metadata for link",
@@ -486,33 +329,34 @@ export const generateBookmarkCard = async (config?: LinkData) => {
                 //     author,
                 //     publisher,
                 // } = newConf;
-                return `${defaultBookmarkCardStyle}
+                return `<div>
+                            ${defaultBookmarkCardStyle}
                             <main class="kg-card-main">
                                 <div class="w-full">
                                     <div class="kg-card kg-bookmark-card">
-                                        <a class="kg-bookmark-container" href="${conf.link}"
-                                            ><div class="kg-bookmark-content">
+                                        <a class="kg-bookmark-container" href="${conf.link}">
+                                            <div class="kg-bookmark-content">
                                                 <div class="kg-bookmark-title">${conf.title}</div>
                                                 <div class="kg-bookmark-description">${conf.description || ""}</div>
                                                 <div class="kg-bookmark-metadata">
                                                     <img class="kg-bookmark-icon" src="${conf.icon}" alt="Link icon" />
                                                     ${
-                                                        conf.author &&
-                                                        `<span class="kg-bookmark-author">${conf.author || ""}</span>`
+                                                        conf.author ?
+                                                        `<span class="kg-bookmark-author">${conf.author || ""}</span>` : ""
                                                     }
                                                     ${
-                                                        conf.publisher &&
+                                                        conf.publisher ?
                                                         `<span class="kg-bookmark-publisher">${
                                                             conf.publisher || ""
-                                                        }</span>`
+                                                        }</span>` : ""
                                                     }
                                                 </div>
                                             </div>
                                             ${
-                                                conf.publisher &&
+                                                conf.thumbnail ?
                                                 `<div class="kg-bookmark-thumbnail">
-                                                <img src="${conf.thumbnail || ""}" alt="Link thumbnail" />
-                                            </div>`
+                                                    <img src="${conf.thumbnail || ""}" alt="Link thumbnail" />
+                                                </div>` : ""
                                             }
                                         </a>
                                     </div>
@@ -568,8 +412,8 @@ export const logSuccess = (operation: string) =>
 export const logError = (operation: string, error: unknown) =>
     console.error(`Error during ${operation}:`, error);
 
-export const toggleBookmarkCard = async (protyle: Protyle): Promise<void> => {
-    protyle.insert(window.Lute.Caret);
+export const toggleBookmarkCard = async (): Promise<void> => {
+    // protyle.insert(window.Lute.Caret);
 
     const currentBlock = getCurrentBlock();
     const id = currentBlock.dataset.nodeId;
@@ -587,6 +431,7 @@ export const toggleBookmarkCard = async (protyle: Protyle): Promise<void> => {
 
         try {
             await convertToBookmarkCard(id, link);
+            currentBlock.focus();
         } catch (error) {
             logError("Error converting to oembed:", error);
         }
@@ -598,7 +443,7 @@ export const toggleBookmarkCard = async (protyle: Protyle): Promise<void> => {
 
 export const convertToBookmarkCard = async (
     id: string,
-    link: string
+    link: string,
 ): Promise<void> => {
     if (!id || !link) return;
 
@@ -613,6 +458,8 @@ export const convertToBookmarkCard = async (
         }
 
         await setBlockAttrs(id, { [CUSTOM_ATTRIBUTE]: link });
+        const element = getElementByBlockId(id);
+        focusBlock(element);
         logSuccess("Block successfully updated with oembed content");
         showMessage("Link converted!");
     } catch (error) {
@@ -623,7 +470,7 @@ export const convertToBookmarkCard = async (
 
 export const convertToOembed = async (
     id: string,
-    link: string
+    link: string,
 ): Promise<void> => {
     if (!id || !link) return;
 
@@ -639,6 +486,8 @@ export const convertToOembed = async (
         }
 
         await setBlockAttrs(id, { [CUSTOM_ATTRIBUTE]: link });
+        const element = getElementByBlockId(id);
+        focusBlock(element);
         logSuccess("Block successfully updated with oembed content");
         showMessage("Link converted!");
     } catch (error) {
@@ -647,8 +496,8 @@ export const convertToOembed = async (
     }
 };
 
-export const toggleOembed = async (protyle: Protyle): Promise<void> => {
-    protyle.insert(window.Lute.Caret);
+export const toggleOembed = async (): Promise<void> => {
+    // protyle.insert(window.Lute.Caret);
 
     const currentBlock = getCurrentBlock();
     const id = currentBlock.dataset.nodeId;
@@ -666,6 +515,7 @@ export const toggleOembed = async (protyle: Protyle): Promise<void> => {
 
         try {
             await convertToOembed(id, link);
+            currentBlock.focus();
         } catch (error) {
             logError("Error converting to oembed:", error);
         }
@@ -711,7 +561,8 @@ export const processSelectedBlocks = async (
                         }
 
                         await setBlockAttrs(id, { [CUSTOM_ATTRIBUTE]: null });
-
+                        const element = getElementByBlockId(id);
+                        focusBlock(element);
                     }
                     else {
                         // extract the link from the block
@@ -809,5 +660,439 @@ export const fetchUrlTitle = async (url: string): Promise<string> => {
     } catch (ex) {
         console.error(ex);
         return "";
+    }
+};
+
+export const focusByWbr = (element: Element, range: Range) => {
+    const wbrElements = element.querySelectorAll("wbr");
+    console.log("🚀 ~ file: utils.ts:852 ~ focusByWbr ~ wbrElements:", wbrElements)
+    if (wbrElements.length === 0) {
+        return;
+    }
+    // 没找到 wbr 产生多个的地方，先顶顶
+    wbrElements.forEach((item, index) => {
+        if (index !== 0) {
+            item.remove();
+        }
+    });
+    const wbrElement = wbrElements[0];
+    if (!wbrElement.previousElementSibling) {
+        if (wbrElement.previousSibling) {
+            // text<wbr>
+            range.setStart(wbrElement.previousSibling, wbrElement.previousSibling.textContent.length);
+        } else if (wbrElement.nextSibling) {
+            if (wbrElement.nextSibling.nodeType === 3) {
+                // <wbr>text
+                range.setStart(wbrElement.nextSibling, 0);
+            } else {
+                // <wbr><span>a</span>
+                range.setStartAfter(wbrElement);
+            }
+        } else {
+            // 内容为空
+            range.setStart(wbrElement.parentElement, 0);
+        }
+    } else {
+        const wbrPreviousSibling = hasPreviousSibling(wbrElement);
+        if (wbrPreviousSibling && wbrElement.previousElementSibling.isSameNode(wbrPreviousSibling)) {
+            if (wbrElement.previousElementSibling.lastChild?.nodeType === 3) {
+                // <em>text</em><wbr> 需把光标放在里面，因为 chrome 点击后也是默认在里面
+                range.setStart(
+                    wbrElement.previousElementSibling.lastChild,
+                    wbrElement.previousElementSibling.lastChild.textContent.length
+                );
+            } else if (
+                wbrPreviousSibling.nodeType !== 3 &&
+                (wbrPreviousSibling as HTMLElement).classList.contains("img")
+            ) {
+                // <img><wbr>, 删除图片后的唯一的一个字符
+                range.setStartAfter(wbrPreviousSibling);
+            } else {
+                // <span class="hljs-function"><span class="hljs-keyword">fun</span></span>
+                range.setStartBefore(wbrElement);
+            }
+        } else {
+            // <em>text</em>text<wbr>
+            range.setStart(wbrElement.previousSibling, wbrElement.previousSibling.textContent.length);
+        }
+    }
+    range.collapse(true);
+    wbrElement.remove();
+    focusByRange(range);
+};
+
+export const focusByRange = (range: Range) => {
+    if (!range) {
+        return;
+    }
+
+    const startNode = range.startContainer.childNodes[range.startOffset] as HTMLElement;
+    if (startNode && startNode.nodeType !== 3 && ["INPUT", "TEXTAREA"].includes(startNode.tagName)) {
+        startNode.focus();
+        return;
+    }
+    const selection = window.getSelection();
+    selection.removeAllRanges();
+    selection.addRange(range);
+};
+
+export const hasPreviousSibling = (element: Node) => {
+    let previousSibling = element.previousSibling;
+    while (previousSibling) {
+        if (previousSibling.textContent === "" && previousSibling.nodeType === 3) {
+            previousSibling = previousSibling.previousSibling;
+        } else {
+            return previousSibling;
+        }
+    }
+    return false;
+};
+
+export const hasNextSibling = (element: Node) => {
+    let nextSibling = element.nextSibling;
+    while (nextSibling) {
+        if (nextSibling.textContent === "" && nextSibling.nodeType === 3) {
+            nextSibling = nextSibling.nextSibling;
+        } else {
+            return nextSibling;
+        }
+    }
+    return false;
+};
+
+export const getEditorRange = (element: Element) => {
+    let range: Range;
+    if (getSelection().rangeCount > 0) {
+        range = getSelection().getRangeAt(0);
+        if (element.isSameNode(range.startContainer) || element.contains(range.startContainer)) {
+            return range;
+        }
+    }
+    // 代码块过长，在代码块的下一个块前删除，代码块会滚动到顶部，因粗需要 preventScroll
+    (element as HTMLElement).focus({ preventScroll: true });
+    let targetElement;
+    if (element.classList.contains("table")) {
+        // 当光标不在表格区域中时表格无法被复制 https://ld246.com/article/1650510736504
+        targetElement = element.querySelector("th") || element.querySelector("td");
+    } else {
+        targetElement = getContenteditableElement(element);
+        if (!targetElement) {
+            targetElement = element;
+        } else if (targetElement.tagName === "TABLE") {
+            // 文档中开头为表格，获取错误 https://ld246.com/article/1663408335459?r=88250
+            targetElement = targetElement.querySelector("th") || element.querySelector("td");
+        }
+    }
+    range = targetElement.ownerDocument.createRange();
+    range.setStart(targetElement || element, 0);
+    range.collapse(true);
+    return range;
+};
+
+export const getContenteditableElement = (element: Element) => {
+    if (
+        !element ||
+        (element.getAttribute("contenteditable") === "true" && !element.classList.contains("protyle-wysiwyg"))
+    ) {
+        return element;
+    }
+    return element.querySelector('[contenteditable="true"]');
+};
+
+export const isNotEditBlock = (element: Element) => {
+    return (
+        [
+            "NodeBlockQueryEmbed",
+            "NodeThematicBreak",
+            "NodeMathBlock",
+            "NodeHTMLBlock",
+            "NodeIFrame",
+            "NodeWidget",
+            "NodeVideo",
+            "NodeAudio",
+        ].includes(element.getAttribute("data-type")) ||
+        (element.getAttribute("data-type") === "NodeCodeBlock" && element.classList.contains("render-node"))
+    );
+};
+
+export const getAllProtyles = () => {
+    let protyles = [];
+    const getProtyle = (layout) => {
+        if (layout.model && layout.model.editor && layout.model.editor.protyle) {
+            protyles.push(layout.model.editor.protyle);
+        }
+        if (layout.children) {
+            layout.children.forEach((child) => getProtyle(child));
+        }
+    };
+    getProtyle(window.top.siyuan.layout.layout);
+    return protyles;
+}
+
+export const focusBlock = (element: Element, parentElement?: HTMLElement, toStart = true): false | Range => {
+    if (!element) {
+        return false;
+    }
+
+    // hr、嵌入块、数学公式、iframe、音频、视频、图表渲染块等，删除段落块后，光标位置矫正 https://github.com/siyuan-note/siyuan/issues/4143
+    if (
+        element.classList.contains("render-node") ||
+        element.classList.contains("iframe") ||
+        element.classList.contains("hr") ||
+        element.classList.contains("av")
+    ) {
+        const range = document.createRange();
+        const type = element.getAttribute("data-type");
+        let setRange = false;
+        if (type === "NodeThematicBreak") {
+            range.selectNodeContents(element.firstElementChild);
+            setRange = true;
+        } else if (type === "NodeBlockQueryEmbed") {
+            if (element.lastElementChild.previousElementSibling?.firstChild) {
+                range.selectNodeContents(element.lastElementChild.previousElementSibling.firstChild);
+                range.collapse(true);
+            } else {
+                // https://github.com/siyuan-note/siyuan/issues/5267
+                range.selectNodeContents(element);
+                range.collapse(true);
+            }
+            setRange = true;
+        } else if (["NodeMathBlock", "NodeHTMLBlock"].includes(type)) {
+            if (element.lastElementChild.previousElementSibling?.lastElementChild?.firstChild) {
+                // https://ld246.com/article/1655714737572
+                range.selectNodeContents(element.lastElementChild.previousElementSibling.lastElementChild.firstChild);
+                range.collapse(true);
+            } else if (element.lastElementChild.previousElementSibling) {
+                range.selectNodeContents(element.lastElementChild.previousElementSibling);
+                range.collapse(true);
+            }
+            setRange = true;
+        } else if (type === "NodeIFrame" || type === "NodeWidget") {
+            range.setStart(element, 0);
+            setRange = true;
+        } else if (type === "NodeVideo") {
+            range.setStart(element.firstElementChild, 0);
+            setRange = true;
+        } else if (type === "NodeAudio") {
+            range.setStart(element.firstElementChild.lastChild, 0);
+            setRange = true;
+        } else if (type === "NodeCodeBlock") {
+            range.selectNodeContents(element);
+            range.collapse(true);
+            setRange = true;
+        } else if (type === "NodeAttributeView") {
+            /// #if !MOBILE
+            const cursorElement = element.querySelector(".av__cursor");
+            if (cursorElement) {
+                range.setStart(cursorElement.firstChild, 0);
+                setRange = true;
+            } else {
+                return false;
+            }
+            /// #else
+            return false;
+            /// #endif
+        }
+        if (setRange) {
+            focusByRange(range);
+            return range;
+        } else {
+            focusSideBlock(element);
+            return false;
+        }
+    }
+    let cursorElement;
+    if (toStart) {
+        cursorElement = getContenteditableElement(element);
+    } else {
+        Array.from(element.querySelectorAll('[contenteditable="true"]'))
+            .reverse()
+            .find((item) => {
+                if (item.getBoundingClientRect().width > 0) {
+                    cursorElement = item;
+                    return true;
+                }
+            });
+    }
+    if (cursorElement) {
+        if (cursorElement.tagName === "TABLE") {
+            if (toStart) {
+                cursorElement = cursorElement.querySelector("th, td");
+            } else {
+                const cellElements = cursorElement.querySelectorAll("th, td");
+                cursorElement = cellElements[cellElements.length - 1];
+            }
+        }
+        let range;
+        if (toStart) {
+            // 需要定位到第一个 child https://github.com/siyuan-note/siyuan/issues/5930
+            range = setFirstNodeRange(cursorElement, getEditorRange(cursorElement));
+            range.collapse(true);
+        } else {
+            let focusHljs = false;
+            // 定位到末尾 https://github.com/siyuan-note/siyuan/issues/5982
+            if (cursorElement.classList.contains("hljs")) {
+                // 代码块末尾定位需在 /n 之前 https://github.com/siyuan-note/siyuan/issues/9141，https://github.com/siyuan-note/siyuan/issues/9189
+                let lastNode = cursorElement.lastChild;
+                if (!lastNode) {
+                    // 粘贴 ``` 报错
+                    cursorElement.innerHTML = "\n";
+                    lastNode = cursorElement.lastChild;
+                }
+                if (lastNode.textContent === "" && lastNode.nodeType === 3) {
+                    lastNode = hasPreviousSibling(cursorElement.lastChild) as HTMLElement;
+                }
+                if (lastNode && lastNode.textContent.endsWith("\n")) {
+                    // https://github.com/siyuan-note/siyuan/issues/11362
+                    if (lastNode.nodeType === 1) {
+                        lastNode = lastNode.lastChild;
+                        while (lastNode && lastNode.textContent.indexOf("\n") === -1) {
+                            lastNode = lastNode.previousSibling;
+                        }
+                    }
+                    range = getEditorRange(cursorElement);
+                    range.setStart(lastNode, lastNode.textContent.length - 1);
+                    focusHljs = true;
+                }
+            }
+            if (!focusHljs) {
+                range = setLastNodeRange(cursorElement, getEditorRange(cursorElement));
+            }
+            range.collapse(false);
+        }
+        focusByRange(range);
+        return range;
+    } else if (parentElement) {
+        parentElement.focus();
+    } else {
+        // li 下面为 hr、嵌入块、数学公式、iframe、音频、视频、图表渲染块等时递归处理
+        if (element.classList.contains("li")) {
+            return focusBlock(element.querySelector("[data-node-id]"), parentElement, toStart);
+        }
+    }
+    return false;
+};
+
+export const focusSideBlock = (updateElement: Element) => {
+    if (updateElement.getAttribute("data-node-id")) {
+        let sideBlockElement;
+        let collapse;
+        if (
+            updateElement.nextElementSibling &&
+            !updateElement.nextElementSibling.classList.contains("protyle-attr") // 用例 https://ld246.com/article/1661928364696
+        ) {
+            collapse = true;
+            sideBlockElement = getNextBlock(updateElement) as HTMLElement;
+        } else if (updateElement.previousElementSibling) {
+            collapse = false;
+            sideBlockElement = getPreviousBlock(updateElement) as HTMLElement;
+        }
+        if (!sideBlockElement) {
+            sideBlockElement = updateElement;
+        }
+        focusBlock(sideBlockElement, undefined, collapse);
+        return;
+    }
+    const range = getEditorRange(updateElement);
+    if (updateElement.nextSibling) {
+        range.selectNodeContents(updateElement.nextSibling);
+        range.collapse(true);
+    } else if (updateElement.previousSibling) {
+        range.selectNodeContents(updateElement.previousSibling);
+        range.collapse(false);
+    }
+    focusByRange(range);
+};
+
+export const setFirstNodeRange = (editElement: Element, range: Range) => {
+    if (!editElement) {
+        return range;
+    }
+    let firstChild = editElement.firstChild as HTMLElement;
+    while (firstChild && firstChild.nodeType !== 3 && !firstChild.classList.contains("render-node")) {
+        if (firstChild.classList.contains("img")) {
+            // https://ld246.com/article/1665360254842
+            range.setStartBefore(firstChild);
+            return range;
+        }
+        firstChild = firstChild.firstChild as HTMLElement;
+    }
+    if (!firstChild) {
+        range.selectNodeContents(editElement);
+        return range;
+    }
+    if (firstChild.nodeType !== 3 && firstChild.classList.contains("render-node")) {
+        range.setStartBefore(firstChild);
+    } else {
+        range.setStart(firstChild, 0);
+    }
+    return range;
+};
+
+export const setLastNodeRange = (editElement: Element, range: Range, setStart = true) => {
+    if (!editElement) {
+        return range;
+    }
+    let lastNode = editElement.lastChild as Element;
+    while (lastNode && lastNode.nodeType !== 3) {
+        if (lastNode.nodeType !== 3 && lastNode.tagName === "BR") {
+            // 防止单元格中 ⇧↓ 全部选中
+            return range;
+        }
+        // https://github.com/siyuan-note/siyuan/issues/12792
+        if (!lastNode.lastChild) {
+            break;
+        }
+        // 最后一个为多种行内元素嵌套
+        lastNode = lastNode.lastChild as Element;
+    }
+    // https://github.com/siyuan-note/siyuan/issues/12753
+    if (!lastNode) {
+        lastNode = editElement;
+    }
+    if (setStart) {
+        if (lastNode.nodeType !== 3 && lastNode.classList.contains("render-node") && lastNode.innerHTML === "") {
+            range.setStartAfter(lastNode);
+        } else {
+            range.setStart(lastNode, lastNode.textContent.length);
+        }
+    } else {
+        if (lastNode.nodeType !== 3 && lastNode.classList.contains("render-node") && lastNode.innerHTML === "") {
+            range.setStartAfter(lastNode);
+        } else {
+            range.setEnd(lastNode, lastNode.textContent.length);
+        }
+    }
+    return range;
+};
+
+export const getNextBlock = (element: Element) => {
+    let parentElement = element;
+    while (parentElement) {
+        if (parentElement.nextElementSibling && !parentElement.nextElementSibling.classList.contains("protyle-attr")) {
+            return parentElement.nextElementSibling as HTMLElement;
+        }
+        const pElement = hasClosestBlock(parentElement.parentElement);
+        if (pElement) {
+            parentElement = pElement;
+        } else {
+            return false;
+        }
+    }
+    return false;
+};
+
+export const getPreviousBlock = (element: Element) => {
+    let parentElement = element;
+    while (parentElement) {
+        if (parentElement.previousElementSibling && parentElement.previousElementSibling.getAttribute("data-node-id")) {
+            return parentElement.previousElementSibling;
+        }
+        const pElement = hasClosestBlock(parentElement.parentElement);
+        if (pElement) {
+            parentElement = pElement;
+        } else {
+            return false;
+        }
     }
 };
