@@ -1,5 +1,7 @@
 // import {URL} from 'url'
 
+import { logger } from "@/utils/logger"
+
 type Provider = {
     provider_name: string
     provider_url: string
@@ -76,6 +78,7 @@ const oembedConfig = ({ provider }: { url: string; provider: { provider_name: st
 
 export const getOembed = async (urlString: string ): Promise<string> => {
         const result = await getProviderEndpointURLForURL(urlString)
+        logger.debug("Provider endpoint:", { result });
 
         if (!result) return null
 
@@ -99,8 +102,9 @@ export const getOembed = async (urlString: string ): Promise<string> => {
         try {
             const res = await fetch(url.toString())
             data = (await res.json()) as OEmbedData;
+            logger.debug("Oembed data:", { data });
         } catch (error) {
-            console.error('Error fetching oembed data', error);
+            logger.error("Error fetching oembed data:", { error });
         }
 
         return data?.html ?? null

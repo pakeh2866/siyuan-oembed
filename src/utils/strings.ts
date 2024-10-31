@@ -1,7 +1,3 @@
-export const isExternal = (url: string) => {
-    return url.startsWith("https://");
-};
-
 /**
  * escapeHtml
  *
@@ -39,6 +35,10 @@ export const stripNewLines = (input: string): string => {
 
 export const wrapInDiv = (input: string): string => {
     return `<div>${input}</div>`;
+};
+
+export const isExternal = (url: string) => {
+    return url.startsWith("https://");
 };
 
 export const getUrlFinalSegment = (url: string): string => {

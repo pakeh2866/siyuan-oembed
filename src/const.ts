@@ -146,7 +146,7 @@ export const defaultBookmarkCardStyle = `
         .kg-bookmark-thumbnail img {
             /* width: 100%; */
             height: 100%;
-            object-fit: contain;
+            object-fit: cover;
             /* or contain */
             position: absolute;
             top: 0;

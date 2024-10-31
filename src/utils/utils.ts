@@ -6,7 +6,7 @@ import OembedPlugin from "../.";
 import { defaultBookmarkCardStyle, CUSTOM_ATTRIBUTE } from "@/const";
 import { getURLMetadata } from "./metadata";
 import { LinkData } from "@/types/utils";
-import { logError, logSuccess } from "@/utils/logger";
+import { logger } from "@/utils/logger";
 import { blank, getUrlFinalSegment, notBlank, regexp, wrapInDiv } from "./strings";
 import { extractUrlFromBlock, focusBlock, getCurrentBlock, getElementByBlockId, isEmptyParagraphBlock } from "./block";
 
@@ -14,7 +14,6 @@ export let plugin: OembedPlugin;
 export function setPlugin(_plugin: any) {
     plugin = _plugin;
 }
-
 
 export const generateBookmarkCard = async (config?: LinkData) => {
         let conf: LinkData = {
@@ -41,6 +40,7 @@ export const generateBookmarkCard = async (config?: LinkData) => {
         if (missingProps.length > 0) {
             try {
                 const fetchedData = await getURLMetadata(conf.link);
+                logger.debug("getURLMetadata:", { link: conf.link, fetchedData });
                 if (!fetchedData) return;
                 missingProps.forEach((prop) => {
                     if (!conf.title && prop === "title")
@@ -57,10 +57,7 @@ export const generateBookmarkCard = async (config?: LinkData) => {
                         conf.publisher = fetchedData.publisher;
                 });
             } catch (error) {
-                logError(
-                    "Failed to fetch metadata for link",
-                    error
-                );
+                logger.error("Failed to fetch metadata for link:", { error });
             }
         }
         try {
@@ -159,6 +156,7 @@ export const toggleBookmarkCard = async (protyle: Protyle): Promise<void> => {
 
     const currentBlock = getCurrentBlock();
     const id = currentBlock.dataset.nodeId;
+    logger.debug("Toggling bookmark for block and ID:", { currentBlock, id });
 
     if (!id) {
         throw new Error("No valid block ID found");
@@ -175,10 +173,10 @@ export const toggleBookmarkCard = async (protyle: Protyle): Promise<void> => {
             await convertToBookmarkCard(id, link);
             currentBlock.focus();
         } catch (error) {
-            logError("Error converting to oembed:", error);
+            logger.error("Error converting to oembed:", { error });
         }
     } catch (error) {
-        logError("bookmark update", error);
+        logger.error("Error toggling oembed link:", { error });
         throw error; // Re-throw to allow caller to handle the error
     }
 };
@@ -188,9 +186,11 @@ export const convertToBookmarkCard = async (
     link: string,
 ): Promise<void> => {
     if (!id || !link) return;
+    logger.debug("Converting bookmark for id and link:", { id, link });
 
     try {
         const dom = await generateBookmarkCard({ link });
+        logger.debug("Generated bookmark card dom:", { dom });
         if (!dom) return;
 
         const success = await updateBlock("dom", dom, id);
@@ -201,11 +201,12 @@ export const convertToBookmarkCard = async (
 
         await setBlockAttrs(id, { [CUSTOM_ATTRIBUTE]: link });
         const element = getElementByBlockId(id);
+        logger.debug("Element ID to focus on after converting:", { element});
         focusBlock(element);
-        logSuccess("Block successfully updated with oembed content");
+        logger.info("Block successfully updated to bookmark card");
         showMessage("Link converted!");
     } catch (error) {
-        logError("Failed to convert block to oembed:", error);
+        logger.error("Failed to convert block to bookmark card:", { error });
         throw error;
     }
 };
@@ -215,9 +216,11 @@ export const convertToOembed = async (
     link: string,
 ): Promise<void> => {
     if (!id || !link) return;
+    logger.debug("Converting bookmark for id and link:", { id, link });
 
     try {
         const html = await getOembed(link);
+        logger.debug("Generated oembed html:", { html });
         if (!html) return;
 
         const wrappedHtml = wrapInDiv(html);
@@ -229,11 +232,12 @@ export const convertToOembed = async (
 
         await setBlockAttrs(id, { [CUSTOM_ATTRIBUTE]: link });
         const element = getElementByBlockId(id);
+        logger.debug("Element ID to focus on after converting:", { element });
         focusBlock(element);
-        logSuccess("Block successfully updated with oembed content");
+        logger.info("Block successfully updated with oembed content");
         showMessage("Link converted!");
     } catch (error) {
-        logError("Failed to convert block to oembed:", error);
+        logger.error("Failed to convert block to oembed:", { error });
         throw error;
     }
 };
@@ -243,6 +247,7 @@ export const toggleOembed = async (protyle: Protyle): Promise<void> => {
 
     const currentBlock = getCurrentBlock();
     const id = currentBlock.dataset.nodeId;
+    logger.debug("Toggling oembed for block and ID:", { currentBlock, id });
 
     if (!id) {
         throw new Error("No valid block ID found");
@@ -259,10 +264,10 @@ export const toggleOembed = async (protyle: Protyle): Promise<void> => {
             await convertToOembed(id, link);
             currentBlock.focus();
         } catch (error) {
-            logError("Error converting to oembed:", error);
+            logger.error("Error converting to oembed:", { error });
         }
     } catch (error) {
-        logError("bookmark update", error);
+        logger.error("Failed to toggle oembed:", { error });
         throw error; // Re-throw to allow caller to handle the error
     }
 };
@@ -272,6 +277,7 @@ export const processSelectedBlocks = async (
     processor: (id: string, link: string) => Promise<void>
 ) => {
     let link: string = null
+    logger.debug("Processing blocks:", { blocks });
     try {
         const promises = blocks.map(async (item: HTMLElement) => {
             const id = item?.dataset.nodeId;
@@ -281,15 +287,18 @@ export const processSelectedBlocks = async (
             try {
                 // if the block is empty, open the dialog to get the link
                 if (isEmptyParagraphBlock(item)) {
+                    logger.debug("Block is empty, opening a link for dialog");
                     link = (await openDialog()) as string;
                 }
                 // if the block is not empty,
                 else {
                     // check if the block has our custom tag already (CUSTOM_ATTRIBUTE)
+                    logger.debug("Block is not empty, checking if this is our link");
                     const isOembed = await isOembedLink(id)
 
                     if (isOembed) {
                         // toggle the link back if it had been previously converted
+                        logger.debug("This is our link previously converted!");
                         const attrs = await getBlockAttrs(id);
                         const originalLink = attrs?.[CUSTOM_ATTRIBUTE];
 
@@ -309,6 +318,7 @@ export const processSelectedBlocks = async (
                     else {
                         // extract the link from the block
                         link = extractUrlFromBlock(item);
+                        logger.debug("Link extracted from block:", { link });
                     }
                 }
 
@@ -319,16 +329,16 @@ export const processSelectedBlocks = async (
                 try {
                     await processor(id, link);
                 } catch (error) {
-                    logError("Error using processor:", error);
+                    logger.error("Error using link processor:", { error });
                 }
             } catch (error) {
-                logError("bookmark update", error);
+                logger.error("Failed to process selected blocks:", { error });
                 throw error; // Re-throw to allow caller to handle the error
             }
         });
         await Promise.all(promises);
     } catch (error) {
-        logError("Error processing blocks:", error);
+        logger.error("Error processing blocks:", { error });
     }
 };
 
@@ -382,7 +392,7 @@ export const fetchUrlTitle = async (url: string): Promise<string> => {
 
         return title.innerText.replace(/(\r\n|\n|\r)/gm, "").trim();
     } catch (ex) {
-        console.error(ex);
+        logger.error("Error fetching URL title:", { ex });
         return "";
     }
 };

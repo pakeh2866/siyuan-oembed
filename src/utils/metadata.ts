@@ -2,7 +2,7 @@ import ogs from "open-graph-scraper-lite";
 import { forwardProxy } from '@/api';
 import { getUrlFinalSegment } from './strings';
 import { LinkData } from "@/types/utils";
-import { logError } from "@/utils/logger";
+import { logger } from "@/utils/logger";
 import { regexp } from "./strings";
 
 export const getURLMetadata = async (
@@ -45,7 +45,9 @@ export const getURLMetadata = async (
             }
         });
         let html = data?.body;
+        logger.debug("Metadata html from proxy:", { url: url, metadata: html });
         const metadata = await ogs({html});
+        logger.debug("Metadata for url:", { url: url, metadata: metadata });
 
         const metadataResult = {
             title: metadata?.result?.ogTitle || metadata?.result?.dcTitle || null,
@@ -116,11 +118,11 @@ export const getURLMetadata = async (
                 doc.querySelector('meta[property="og:site_name"]')?.getAttribute("content") ||
                 new URL(url).origin ||
                 null;
-
+        logger.debug("Metadata (linkdata)", { linkData });
         return linkData;
 
         } catch (ex) {
-            logError("Error fetching metadata:", ex);
+            logger.error("Error fetching metadata:", { ex });
     return null;
     }
 };
