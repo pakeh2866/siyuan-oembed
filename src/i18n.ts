@@ -1,7 +1,9 @@
-// Using Vite's import.meta.glob to dynamically import all JSON files
-const languageModules = import.meta.glob<I18nLanguage>(
-    "../public/i18n/*.json",
-    { eager: true }
+import yaml from "js-yaml";
+
+// Using Vite's import.meta.glob to dynamically import all YAML files
+const languageModules = import.meta.glob(
+    "../public/i18n/*.yaml",
+    { eager: true, query: "?raw", import: "default" } // 'as: "raw"' to load content as a raw string
 );
 
 // Create I18N object with proper typing
@@ -9,11 +11,12 @@ const I18N: Record<string, I18nLanguage> = {};
 
 // Process all imported modules and create properly typed I18N object
 for (const path in languageModules) {
-    // Extract the filename without extension (e.g., "en_US" from "../public/i18n/en_US.json")
-    const match = path.match(/\/([^/]+)\.json$/);
+    // Extract the filename without extension (e.g., "en_US" from "../public/i18n/en_US.yaml")
+    const match = path.match(/\/([^/]+)\.yaml$/);
     if (match && match[1]) {
         const langKey = match[1]; // e.g., "en_US"
-        I18N[langKey] = languageModules[path];
+        // Parse YAML content to JSON
+        I18N[langKey] = yaml.load(languageModules[path] as string) as I18nLanguage;
     }
 }
 

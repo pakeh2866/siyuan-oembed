@@ -1,0 +1,34 @@
+---
+addTopBarIcon: Add a top bar icon by plugin
+cancel: Cancel
+save: Save
+byeMenu: 'Bye, Menu!'
+helloPlugin: 'Hello, Plugin!'
+byePlugin: 'Bye, Plugin!'
+showDialog: Show dialog
+removedData: Data deleted
+confirmRemove: Confirm to delete the data in ${name}?
+insertEmoji: Insert Emoji
+toggleOembed: Toggle Oembed Link
+toggleBookmarkCard: Toggle Bookmark Card
+removeSpace: Remove Space
+convertOembed: Convert to Oembed Link
+getTab: Print out all opened custom tabs in the debugger
+name: Oembed
+hintTitle: About
+
+insertURLDialogTitle: Insert URL
+settings:
+  name: Settings
+  EnableDebug:
+    title: Enable debug
+    text: Enable verbose debug to help with troubleshooting
+  CatchClipboard:
+    title: Catch clipboard links
+    text: Automatically transform links pasted from clipboard
+  ClipboardConverter:
+    title: Select paste conversion
+    text: Which conversion to apply when pasting a link from clipboard
+  Blacklist:
+    title: Blacklist
+    text: List of domains to to skip conversion for (one per line)
