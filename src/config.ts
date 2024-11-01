@@ -14,14 +14,14 @@ export const SlashCommandTemplates = {
         filter: ["oembed", "Oembed", "oe"],
         icon: "iconOembed",
         name: "Oembed",
-        template: `Convert URLs in your markdown to the embedded version of those URLs`,
+        template: `Ctrl+Shift+O`,
         callback: toggleOembed,
     },
     bookmarkCard: {
         filter: ["card", "bookmark", "bk"],
         icon: "iconLink",
         name: "Bookmark card",
-        template: `Convert URLs in your markdown to bookmark cards`,
+        template: `Ctrl+Shift+C`,
         callback: toggleBookmarkCard,
     },
 };
