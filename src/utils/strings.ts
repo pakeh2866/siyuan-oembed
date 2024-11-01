@@ -29,8 +29,8 @@ export const regexp: { [key: string]: RegExp } = {
     url: /((([A-Za-z]{3,9}:(?:\/\/)?)(?:[-;:&=+$,\w]+@)?[A-Za-z0-9.-]+(:[0-9]+)?|(?:www.|[-;:&=+$,\w]+@)[A-Za-z0-9.-]+)((?:\/[+~%/.\w-_]*)?\??(?:[-+=&;%@.\w_]*)#?(?:[\w]*))?)/,
 };
 
-export const stripNewLines = (input: string): string => {
-    return input.replace(/\n/g, "");
+export const stripNewlines = (str: string): string => {
+    return str.replace(/[\r\n]+/g, " ").trim();
 };
 
 export const wrapInDiv = (input: string): string => {
@@ -57,4 +57,22 @@ export const blank = (text: string): boolean => {
 
 export const notBlank = (text: string): boolean => {
     return !blank(text);
+};
+
+/**
+ * Removes all whitespace characters from a string (spaces, tabs, newlines)
+ * @param str Input string that may contain whitespace
+ * @returns String with all whitespace removed
+ */
+export const stripWhitespace = (str: string): string => {
+    return str.replace(/\s+/g, '');
+};
+
+/**
+ * Removes all newlines and subsequent whitespace until the next non-whitespace character
+ * @param str Input string that may contain newlines followed by whitespace
+ * @returns String with newlines and their trailing whitespace removed
+ */
+export const stripNewlinesAndIndents = (str: string): string => {
+    return str.replace(/[\r\n]+\s*/g, '');
 };

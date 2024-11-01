@@ -22,15 +22,6 @@
 
     const dispatch = createEventDispatcher();
 
-    // function click() {
-    //     button?.callback();
-    //     dispatch("click", { key: key });
-    // }
-
-    // function changed() {
-    //     dispatch("changed", { key: key, value: value });
-    // }
-
     function onClick() {
         dispatch("click", { key: key });
     }
@@ -70,6 +61,7 @@
     <textarea
         class="b3-text-field fn__block"
         style={`resize: vertical; height: 10em; white-space: nowrap; ${style}`}
+        {placeholder}
         bind:value={value}
         on:change={updateSetting}
     />

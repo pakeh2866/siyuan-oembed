@@ -5,10 +5,11 @@ import { logger } from "@/utils/logger";
 import { getURLMetadata } from "@/utils/metadata";
 import { i18n } from "./i18n";
 import { extractUrlFromBlock, focusBlock, getCurrentBlock, getElementByBlockId, isEmptyParagraphBlock } from "@/utils/block";
-import { blank, getUrlFinalSegment, notBlank, regexp, wrapInDiv } from "@/utils/strings";
+import { blank, getUrlFinalSegment, notBlank, regexp, stripNewlinesAndIndents, wrapInDiv } from "@/utils/strings";
 import { forwardProxy, getBlockAttrs, setBlockAttrs, updateBlock } from "./api";
 import getOembed from "./oembed";
 import { progressStatus } from "@/utils/status";
+import { settings } from "./settings";
 
 export const generateBookmarkCard = async (config?: LinkData) => {
     let conf: LinkData = {
@@ -26,6 +27,8 @@ export const generateBookmarkCard = async (config?: LinkData) => {
     const missingProps = ["title", "description", "icon", "author", "thumbnail", "publisher"].filter(
         (prop) => !conf[prop as keyof typeof conf]
     );
+    const css = stripNewlinesAndIndents(settings.get("BookmarkCustomCSS") || defaultBookmarkCardStyle);
+    logger.debug("CSS for bookmark card:", css)
 
     if (missingProps.length > 0) {
         try {
@@ -59,44 +62,44 @@ export const generateBookmarkCard = async (config?: LinkData) => {
             //     publisher,
             // } = newConf;
             return `<div>
-                            ${defaultBookmarkCardStyle}
-                            <main class="kg-card-main">
-                                <div class="w-full">
-                                    <div class="kg-card kg-bookmark-card">
-                                        <a class="kg-bookmark-container" href="${conf.link}">
-                                            <div class="kg-bookmark-content">
-                                                <div class="kg-bookmark-title">${conf.title}</div>
-                                                <div class="kg-bookmark-description">${conf.description || ""}</div>
-                                                <div class="kg-bookmark-metadata">
-                                                    <img class="kg-bookmark-icon" src="${conf.icon}" alt="Link icon" />
-                                                    ${
-                                                        conf.author
-                                                            ? `<span class="kg-bookmark-author">${
-                                                                  conf.author || ""
-                                                              }</span>`
-                                                            : ""
-                                                    }
-                                                    ${
-                                                        conf.publisher
-                                                            ? `<span class="kg-bookmark-publisher">${
-                                                                  conf.publisher || ""
-                                                              }</span>`
-                                                            : ""
-                                                    }
-                                                </div>
+                        <style>${css}</style>
+                        <main class="kg-card-main">
+                            <div class="kg-card-outer">
+                                <div class="kg-card kg-bookmark-card">
+                                    <a class="kg-bookmark-container" href="${conf.link}">
+                                        <div class="kg-bookmark-content">
+                                            <div class="kg-bookmark-title">${conf.title}</div>
+                                            <div class="kg-bookmark-description">${conf.description || ""}</div>
+                                            <div class="kg-bookmark-metadata">
+                                                <img class="kg-bookmark-icon" src="${conf.icon}" alt="Link icon" />
+                                                ${
+                                                    conf.author
+                                                        ? `<span class="kg-bookmark-author">${
+                                                                conf.author || ""
+                                                            }</span>`
+                                                        : ""
+                                                }
+                                                ${
+                                                    conf.publisher
+                                                        ? `<span class="kg-bookmark-publisher">${
+                                                                conf.publisher || ""
+                                                            }</span>`
+                                                        : ""
+                                                }
                                             </div>
-                                            ${
-                                                conf.thumbnail
-                                                    ? `<div class="kg-bookmark-thumbnail">
-                                                    <img src="${conf.thumbnail || ""}" alt="Link thumbnail" />
-                                                </div>`
-                                                    : ""
-                                            }
-                                        </a>
-                                    </div>
+                                        </div>
+                                        ${
+                                            conf.thumbnail
+                                                ? `<div class="kg-bookmark-thumbnail">
+                                                <img src="${conf.thumbnail || ""}" alt="Link thumbnail" />
+                                            </div>`
+                                                : ""
+                                        }
+                                    </a>
                                 </div>
-                            </main>
-                        </div>`;
+                            </div>
+                        </main>
+                    </div>`;
         }
     } catch (e) {
         console.error(e);

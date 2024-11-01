@@ -31,6 +31,11 @@
         ],
         bookmarkCard: [
             {
+                name: "BookmarkCustomCSS",
+                type: "textarea",
+                direction: "row",
+            },
+            {
                 name: "BookmarkCardBlacklist",
                 type: "textarea",
                 direction: "row",

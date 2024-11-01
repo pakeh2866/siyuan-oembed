@@ -18,6 +18,7 @@ class SettingsManager {
         ClipboardConverter: "bookmarkCard" as ConvertType,
         OembedBlacklist: "" as string,
         BookmarkCardBlacklist: "" as string,
+        BookmarkCustomCSS: "" as string,
     };
 
     constructor() {
@@ -48,7 +49,7 @@ class SettingsManager {
     async load() {
         let loaded = await this.plugin.loadData(SettingsFile);
         if (loaded == null || loaded == undefined || loaded == "") {
-            logger.debug("No config file, use defaults")
+            logger.debug("No config file, use defaults");
             this.save();
         } else {
             logger.debug("Reading config file:", SettingsFile);

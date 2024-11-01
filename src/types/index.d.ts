@@ -111,6 +111,7 @@ type SettingsKey =
     | "ClipboardConverter"
     | "EnableDebug"
     | "OembedBlacklist"
-    | "BookmarkCardBlacklist";
+    | "BookmarkCardBlacklist"
+    | "BookmarkCustomCSS";
 
 type ConvertType = "oembed" | "bookmarkCard";

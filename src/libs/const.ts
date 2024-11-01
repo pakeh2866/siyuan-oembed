@@ -115,7 +115,6 @@ export const builtinEditTools: Array<string | IToolbarItem> = [
 ];
 
 export const defaultBookmarkCardStyle = `
-    <style>
         .kg-card {
             font-family:
                 'Inter Variable',
@@ -140,6 +139,9 @@ export const defaultBookmarkCardStyle = `
             margin: 0 auto;
             display: flex;
             justify-content: center;
+        }
+        .kg-card-outer {
+            width: 100%;
         }
         .kg-bookmark-card,
         .kg-bookmark-card * {
@@ -241,8 +243,4 @@ export const defaultBookmarkCardStyle = `
             top: 0;
             left: 0;
             border-radius: 0 2px 2px 0;
-        }
-        .w-full {
-            width: 100%;
-        }
-    </style>`;
+        }`;

@@ -108,12 +108,11 @@ export default class OembedPlugin extends Plugin {
             title: `${this.i18n.settings.name}`,
             content: `<div id="SettingsPanel" style="height: 100%"></div>`,
             width: "50%",
-            height: "27rem",
+            height: "32rem",
             destroyCallback: () => {
                 panel.$destroy();
             },
         });
-        // let panel = new SettingExample({
         let panel = new Settings({
             target: dialog.element.querySelector("#SettingsPanel"),
         });

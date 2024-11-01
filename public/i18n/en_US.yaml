@@ -34,12 +34,16 @@ settings:
       bookmarkCard: Bookmark Card
   OembedBlacklist:
     title: Blacklist
-    text: List of domains to to skip conversion for (one per line)
+    text: List of domains to skip conversion for (one per line)
     placeholder: Enter domains to block
   BookmarkCardBlacklist:
     title: Blacklist
-    text: List of domains to to skip conversion for (one per line)
+    text: List of domains to skip conversion for (one per line)
     placeholder: Enter domains to block
+  BookmarkCustomCSS:
+    title: Custom CSS for bookmark cards
+    text: Enter your custom CSS to style the bookmark to your liking. You can style all `kg-card-*` and `kg-bookmark-*` classes. Don't include enclosing <style> tags.
+    placeholder: Enter your custom CSS
 
 SettingGroups:
   general: ⚙ General
