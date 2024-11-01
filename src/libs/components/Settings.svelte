@@ -3,6 +3,7 @@
     import { settings } from "@/settings";
     import { onDestroy, onMount } from "svelte";
     import Panels from "./SettingsPanels.svelte";
+    import { logger } from "@/utils/logger";
 
     let contents = i18n.settings;
 
@@ -63,16 +64,16 @@
     }
 
     onMount(() => {
-        console.log("Setting Svelte Mounted");
+        logger.debug("Setting Svelte Mounted");
     });
 
     onDestroy(() => {
-        console.log("Setting Svelte Destroyed");
+        logger.debug("Setting Svelte Destroyed");
         settings.save();
     });
 
     function onClick({ detail }) {
-        console.log(detail);
+        logger.debug("Setting Svelte onClick:", detail);
     }
 </script>
 

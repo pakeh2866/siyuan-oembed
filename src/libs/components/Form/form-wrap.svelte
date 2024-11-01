@@ -8,11 +8,8 @@
 -->
 <script lang="ts">
     export let title: string; // Displayint Setting Title
-    console.log("🚀 ~ file: form-wrap.svelte:11 ~ title:", title)
     export let description: string; // Displaying Setting Text
-    console.log("🚀 ~ file: form-wrap.svelte:13 ~ description:", description)
     export let direction: 'row' | 'column' = 'column';
-    console.log("🚀 ~ file: form-wrap.svelte:15 ~ direction:", direction)
 </script>
 
 {#if direction === "row"}
