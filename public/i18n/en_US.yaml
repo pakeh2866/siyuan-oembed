@@ -33,11 +33,11 @@ settings:
       oembed: Oembed
       bookmarkCard: Bookmark Card
   OembedBlacklist:
-    title: Blacklist
+    title: Blocklist
     text: List of domains to skip conversion for (one per line)
     placeholder: Enter domains to block
   BookmarkCardBlacklist:
-    title: Blacklist
+    title: Blocklist
     text: List of domains to skip conversion for (one per line)
     placeholder: Enter domains to block
   BookmarkCustomCSS:

@@ -20,20 +20,20 @@
     "desktop-window"
   ],
   "displayName": {
-    "en_US": "Oembed for links",
-    "zh_CN": "Oembed for links"
+    "en_US": "Oembed and bookmark cards",
+    "pl_PL": "Oembed i karty zakładek"
   },
   "description": {
-    "en_US": "A plugin that extracts oembed data when pasting or creating a link",
-    "zh_CN": "A plugin that extracts oembed data when pasting or creating a link"
+    "en_US": "A plugin that extracts oembed data from links and creates a Ghost CMS-style cards as bookmarks",
+    "pl_PL": "Wtyczka wyodrębniająca dane oembed z linków i tworząca karty w stylu Ghost CMS jako zakładki"
   },
   "readme": {
     "en_US": "README.md",
-    "zh_CN": "README_zh_CN.md"
+    "pl_PL": "README_pl_PL.md"
   },
   "funding": {
     "custom": [
-      ""
+      "https://buymeacoffee.com/anarion"
     ]
   },
   "keywords": [
@@ -43,6 +43,7 @@
     "twitter",
     "metadata",
     "bookmark",
-    "cards"
+    "cards",
+    "link"
   ]
 }
