@@ -4,11 +4,7 @@ export const logSuccess = (operation: string) => console.log(`${operation} compl
 
 export const logError = (operation: string, error: unknown) => console.error(`Error during ${operation}:`, error);
 
-// import { settings } from "./settings";
-
-export const settings = {
-    debug: true, // Set this to false to disable debug logging
-};
+import { settings } from "../settings";
 
 class Logger {
     private static instance: Logger;
@@ -23,7 +19,7 @@ class Logger {
     }
 
     debug(message: string, ...optionalParams: any[]): void {
-        if (settings.debug) {
+        if (settings.get("EnableDebug")) {
             console.debug(`[DEBUG][${i18n.name}] ${message}`, ...optionalParams);
         }
     }
