@@ -1,51 +1,51 @@
 ---
-addTopBarIcon: Add a top bar icon by plugin
-cancel: Cancel
-save: Save
-byeMenu: 'Bye, Menu!'
-helloPlugin: 'Hello, Plugin!'
-byePlugin: 'Bye, Plugin!'
-showDialog: Show dialog
-removedData: Data deleted
-confirmRemove: Confirm to delete the data in ${name}?
-insertEmoji: Insert Emoji
-toggleOembed: Toggle Oembed Link
-toggleBookmarkCard: Toggle Bookmark Card
-removeSpace: Remove Space
-convertOembed: Convert to Oembed Link
-getTab: Print out all opened custom tabs in the debugger
+addTopBarIcon: Dodaj ikonę do górnego paska
+cancel: Anuluj
+save: Zapisz
+byeMenu: 'Żegnaj, Menu!'
+helloPlugin: 'Witaj, Wtyczko!'
+byePlugin: 'Żegnaj, Wtyczko!'
+showDialog: Pokaż okno dialogowe
+removedData: Dane usunięte
+confirmRemove: Potwierdzasz usunięcie danych w ${name}?
+insertEmoji: Wstaw emoji
+toggleOembed: Przełącz link Oembed
+toggleBookmarkCard: Przełącz kartę zakładki
+removeSpace: Usuń spację
+convertOembed: Konwertuj na link Oembed
+getTab: Wyświetl wszystkie otwarte karty w debuggerze
 name: Oembed
-hintTitle: About
+hintTitle: O wtyczce
 
-insertURLDialogTitle: Insert URL
+insertURLDialogTitle: Wstaw URL
 settings:
-  name: Settings
+  name: Ustawienia
   EnableDebug:
-    title: Enable debug
-    text: Enable verbose debug to help with troubleshooting
+    title: Włącz debugowanie
+    text: Włącz szczegółowe debugowanie, aby pomóc w rozwiązywaniu problemów
   CatchClipboard:
-    title: Catch clipboard links
-    text: Automatically transform links pasted from clipboard
+    title: Przechwytuj linki ze schowka
+    text: Automatycznie przekształcaj linki wklejane ze schowka
   ClipboardConverter:
-    title: Select paste conversion
-    text: Which conversion to apply when pasting a link from clipboard
+    title: Wybierz typ konwersji przy wklejaniu
+    text: Jaki typ konwersji zastosować podczas wklejania linku ze schowka
     options:
       oembed: Oembed
-      bookmarkCard: Bookmark Card
+      bookmarkCard: Karta zakładki
   OembedBlacklist:
-    title: Blacklist
-    text: List of domains to skip conversion for (one per line)
-    placeholder: Enter domains to block
+    title: Lista blokowanych domen
+    text: Lista domen do pominięcia przy konwersji (jedna na linię) (wymaga zaimplementowania)
+    placeholder: Wprowadź domeny do zablokowania
   BookmarkCardBlacklist:
-    title: Blacklist
-    text: List of domains to skip conversion for (one per line)
-    placeholder: Enter domains to block
+    title: Lista blokowanych domen
+    text: Lista domen do pominięcia przy konwersji (jedna na linię) (wymaga zaimplementowania)
+    placeholder: Wprowadź domeny do zablokowania
   BookmarkCustomCSS:
-    title: Custom CSS for bookmark cards
-    text: Enter your custom CSS to style the bookmark to your liking. You can style all `kg-card-*` and `kg-bookmark-*` classes. Don't include enclosing <style> tags.
-    placeholder: Enter your custom CSS
+    title: Własny CSS dla kart zakładek
+    text: Wprowadź własny CSS, aby dostosować wygląd zakładek. Możesz stylizować wszystkie klasy `kg-card-*` i `kg-bookmark-*`. Nie dodawaj znaczników <style>.
+    placeholder: Wprowadź własny CSS
 
 SettingGroups:
-  general: ⚙ General
+  general: ⚙ Ogólne
   oembed: 👁‍🗨 Oembed
-  bookmarkCard: 🔖 Bookmark card
+  bookmarkCard: 🔖 Karta zakładki
