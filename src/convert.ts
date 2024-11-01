@@ -176,12 +176,12 @@ export const toggleBookmarkCard = async (protyle: Protyle): Promise<void> => {
 export const convertToBookmarkCard = async (id: string, link: string): Promise<void> => {
     if (!id || !link) return;
     logger.debug("Converting bookmark for id and link:", { id, link });
-    progressStatus(`Converting ${link}`)
 
     try {
         const dom = await generateBookmarkCard({ link });
         logger.debug("Generated bookmark card dom:", { dom });
         if (!dom) return;
+        progressStatus(`Converting ${link}`)
 
         const success = await updateBlock("dom", dom, id);
 
@@ -204,12 +204,12 @@ export const convertToBookmarkCard = async (id: string, link: string): Promise<v
 export const convertToOembed = async (id: string, link: string): Promise<void> => {
     if (!id || !link) return;
     logger.debug("Converting bookmark for id and link:", { id, link });
-    progressStatus(`Converting ${link}`);
 
     try {
         const html = await getOembed(link);
         logger.debug("Generated oembed html:", { html });
         if (!html) return;
+        progressStatus(`Converting ${link}`);
 
         const wrappedHtml = wrapInDiv(html);
         const success = await updateBlock("dom", wrappedHtml, id);
