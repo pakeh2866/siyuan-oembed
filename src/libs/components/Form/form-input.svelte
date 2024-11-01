@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { eventBus } from "@/utils/event-bus";
     import { createEventDispatcher } from "svelte";
     export let type: string; // Setting Type
     export let key: string;
@@ -21,14 +22,26 @@
 
     const dispatch = createEventDispatcher();
 
-    function click() {
-        button?.callback();
+    // function click() {
+    //     button?.callback();
+    //     dispatch("click", { key: key });
+    // }
+
+    // function changed() {
+    //     dispatch("changed", { key: key, value: value });
+    // }
+
+    function onClick() {
         dispatch("click", { key: key });
     }
 
-    function changed() {
-        dispatch("changed", { key: key, value: value });
+    function updateSetting() {
+        eventBus.publish(eventBus.EventSetting, {
+            key: key,
+            value: value,
+        });
     }
+
 </script>
 
 {#if type === "checkbox"}
@@ -38,7 +51,7 @@
         id={key}
         type="checkbox"
         bind:checked={value}
-        on:change={changed}
+        on:change={updateSetting}
         style={style}
     />
 {:else if type === "textinput"}
@@ -50,7 +63,7 @@
         id={key}
         {placeholder}
         bind:value={value}
-        on:change={changed}
+        on:change={updateSetting}
         style={style}
     />
 {:else if type === "textarea"}
@@ -58,7 +71,7 @@
         class="b3-text-field fn__block"
         style={`resize: vertical; height: 10em; white-space: nowrap; ${style}`}
         bind:value={value}
-        on:change={changed}
+        on:change={updateSetting}
     />
 {:else if type === "number"}
     <input
@@ -68,7 +81,7 @@
         id={key}
         type="number"
         bind:value={value}
-        on:change={changed}
+        on:change={updateSetting}
         style={style}
     />
 {:else if type === "button"}
@@ -79,7 +92,7 @@
         class:fn__flex-center={true}
         class:fn__size200={fnSize}
         id={key}
-        on:click={click}
+        on:click={onClick}
         style={style}
     >
         {button.label}
@@ -92,7 +105,7 @@
         class:fn__size200={fnSize}
         id="iconPosition"
         bind:value={value}
-        on:change={changed}
+        on:change={updateSetting}
         style={style}
     >
         {#each Object.entries(options) as [value, text]}
@@ -111,7 +124,7 @@
             step={slider.step}
             type="range"
             bind:value={value}
-            on:change={changed}
+            on:change={updateSetting}
             style={style}
         />
     </div>

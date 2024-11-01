@@ -105,3 +105,12 @@ interface Window {
     };
     Lute: any;
 }
+
+type SettingsKey =
+    | "CatchClipboard"
+    | "ClipboardConverter"
+    | "EnableDebug"
+    | "OembedBlacklist"
+    | "BookmarkCardBlacklist";
+
+type ConvertType = "oembed" | "bookmarkCard";

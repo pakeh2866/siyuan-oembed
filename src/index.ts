@@ -7,52 +7,33 @@ import {
     IModel,
     // Constants,
     IMenuItemOption,
+    getBackend,
 } from "siyuan";
 import "@/index.scss";
 
-// import HelloExample from "@/hello.svelte";
-import SettingExample from "@/setting-example.svelte";
-
-import { SettingUtils } from "./libs/setting-utils";
-// import { svelteDialog } from "./libs/dialog";
 import { BlockIconTemplate, createBlockIconConfig, SlashCommandTemplates, ToolbarCommandsTemplates } from "./config";
 import { builtinEditTools, STORAGE_NAME } from "@/libs/const";
 import { processSelectedBlocks } from "./convert";
-
-export let plugin: OembedPlugin;
-export function setPlugin(_plugin: any) {
-    plugin = _plugin;
-}
+import { setPlugin } from "@/utils/plugin";
+import { logger } from "./utils/logger";
+import { settings } from "./settings";
+import { eventBus } from "@/utils/event-bus";
+import Settings from "@/libs/components/Settings.svelte";
 
 export default class OembedPlugin extends Plugin {
     customTab: () => IModel;
     private isMobile: boolean;
     private blockIconEventBindThis = this.blockIconEvent.bind(this);
-    private settingUtils: SettingUtils;
     init() {
         setPlugin(this);
     }
-
-    // private showDialog() {
-    //     svelteDialog({
-    //         title: `SiYuan ${Constants.SIYUAN_VERSION}`,
-    //         width: this.isMobile ? "92vw" : "720px",
-    //         constructor: (container: HTMLElement) => {
-    //             return new HelloExample({
-    //                 target: container,
-    //                 props: {
-    //                     app: this.app,
-    //                 },
-    //             });
-    //         },
-    //     });
-    // }
 
     async onload() {
         this.init();
         this.data[STORAGE_NAME] = { readonlyText: "Readonly" };
 
-        console.log("loading oembed plugin", this.i18n);
+        logger.debug("Loading oembed plugin", this.i18n);
+        let start = performance.now();
 
         const frontEnd = getFrontend();
         this.isMobile = frontEnd === "mobile" || frontEnd === "browser-mobile";
@@ -62,83 +43,48 @@ export default class OembedPlugin extends Plugin {
 
         this.eventBus.on("click-blockicon", this.blockIconEventBindThis);
 
-        const topBarElement = this.addTopBar({
-            icon: "iconOembed",
-            title: this.i18n.addTopBarIcon,
-            position: "right",
-            callback: () => {
-                if (this.isMobile) {
-                    this.addMenu();
-                } else {
-                    let rect = topBarElement.getBoundingClientRect();
-                    // 如果被隐藏，则使用更多按钮
-                    if (rect.width === 0) {
-                        rect = document
-                            .querySelector("#barMore")
-                            .getBoundingClientRect();
-                    }
-                    if (rect.width === 0) {
-                        rect = document
-                            .querySelector("#barPlugins")
-                            .getBoundingClientRect();
-                    }
-                    this.addMenu(rect);
-                }
-            },
-        });
+        settings.setPlugin(this);
+
+        await Promise.all([settings.load()]);
+
+        // const topBarElement = this.addTopBar({
+        //     icon: "iconOembed",
+        //     title: this.i18n.addTopBarIcon,
+        //     position: "right",
+        //     callback: () => {
+        //         if (this.isMobile) {
+        //             this.addMenu();
+        //         } else {
+        //             let rect = topBarElement.getBoundingClientRect();
+        //             // 如果被隐藏，则使用更多按钮
+        //             if (rect.width === 0) {
+        //                 rect = document.querySelector("#barMore").getBoundingClientRect();
+        //             }
+        //             if (rect.width === 0) {
+        //                 rect = document.querySelector("#barPlugins").getBoundingClientRect();
+        //             }
+        //             this.addMenu(rect);
+        //         }
+        //     },
+        // });
 
         // this.eventBus.on("paste", this.handlePaste);
 
-        this.settingUtils = new SettingUtils({
-            plugin: this,
-            name: STORAGE_NAME,
+        this.protyleSlash = Object.values(SlashCommandTemplates).map((template) => {
+            return {
+                filter: template.filter,
+                html: `<div class="b3-list-item__first"><svg class="b3-list-item__graphic"><use xlink:href="#${template.icon}"></use></svg><span class="b3-list-item__text">${template.name}</span><span class="b3-list-item__meta">${template.template}</span></div>`,
+                id: template.name,
+                callback: template.callback,
+            };
         });
-        this.settingUtils.addItem({
-            key: "Check",
-            value: true,
-            type: "checkbox",
-            title: "Enable automatic embedding",
-            description: "Enable automatic embedding of every link",
-            action: {
-                callback: () => {
-                    // Return data and save it in real time
-                    let value = !this.settingUtils.get("Check");
-                    this.settingUtils.set("Check", value);
-                    console.log(value);
-                },
-            },
-        });
-        this.settingUtils.addItem({
-            key: "Hint",
-            value: "",
-            type: "hint",
-            title: this.i18n.hintTitle,
-            description: this.i18n.hintDesc,
-        });
-
-        try {
-            this.settingUtils.load();
-        } catch (error) {
-            console.error(
-                "Error loading settings storage, probably empty config json:",
-                error
-            );
-        }
-
-        this.protyleSlash = Object.values(SlashCommandTemplates).map(
-            (template) => {
-                return {
-                    filter: template.filter,
-                    html: `<div class="b3-list-item__first"><svg class="b3-list-item__graphic"><use xlink:href="#${template.icon}"></use></svg><span class="b3-list-item__text">${template.name}</span><span class="b3-list-item__meta">${template.template}</span></div>`,
-                    id: template.name,
-                    callback: template.callback,
-                };
-            }
-        );
 
         this.protyleOptions = {
             toolbar: [...builtinEditTools, ...Object.values(ToolbarCommandsTemplates)],
         };
+
+        let end = performance.now();
+        logger.debug(`Loading oembed completed in ${end - start} ms`);
     }
 
     // handlePaste(arg0: string, handlePaste: any) {
@@ -156,25 +102,22 @@ export default class OembedPlugin extends Plugin {
         console.log("uninstall");
     }
 
-    /**
-     * A custom setting panel provided by svelte
-     */
-    openDIYSetting(): void {
-        const dialog = new Dialog({
-            title: "Settings Panel",
-            content: `<div id="SettingsPanel" style="height: 100%;"></div>`,
-            width: "800px",
-            destroyCallback: (options) => {
-                console.log("destroyCallback", options);
-                //You'd better destroy the component when the dialog is closed
+    openSetting(): void {
+        let dialog = new Dialog({
+            //@ts-ignore
+            title: `${this.i18n.settings.name}`,
+            content: `<div id="SettingsPanel" style="height: 100%"></div>`,
+            width: "50%",
+            height: "27rem",
+            destroyCallback: () => {
                 panel.$destroy();
             },
         });
-        const panel = new SettingExample({
+        // let panel = new SettingExample({
+        let panel = new Settings({
             target: dialog.element.querySelector("#SettingsPanel"),
         });
     }
-
     // private eventBusPaste(event: any) {
     //     // 如果需异步处理请调用 preventDefault， 否则会进行默认处理
     //     event.preventDefault();
@@ -186,10 +129,7 @@ export default class OembedPlugin extends Plugin {
     //     });
     // }
 
-    private attachClickHandler(
-        template: BlockIconTemplate,
-        blockElements: HTMLElement[]
-    ): IMenuItemOption {
+    private attachClickHandler(template: BlockIconTemplate, blockElements: HTMLElement[]): IMenuItemOption {
         return {
             ...template,
             click: async () => {
@@ -199,7 +139,9 @@ export default class OembedPlugin extends Plugin {
     }
 
     // Add block icon menu
-    private blockIconEvent({detail}: {
+    private blockIconEvent({
+        detail,
+    }: {
         detail: {
             blockElements: HTMLElement[];
             menu: { addItem: (item: IMenuItemOption) => void };
@@ -207,9 +149,8 @@ export default class OembedPlugin extends Plugin {
     }) {
         const blockIconCommandTemplates = createBlockIconConfig();
 
-        const submenus: IMenuItemOption[] = blockIconCommandTemplates.map(
-            (template) =>
-                this.attachClickHandler(template, detail.blockElements)
+        const submenus: IMenuItemOption[] = blockIconCommandTemplates.map((template) =>
+            this.attachClickHandler(template, detail.blockElements)
         );
 
         detail.menu.addItem({
@@ -221,33 +162,33 @@ export default class OembedPlugin extends Plugin {
     }
 
     // Add Top Menu Items for Settings
-    private addMenu(rect?: DOMRect) {
-        const menu = new Menu("topBarSample", () => {
-            console.log(this.i18n.byeMenu);
-        });
-        menu.addSeparator();
-        menu.addItem({
-            icon: "iconSettings",
-            label: "Official Setting Dialog",
-            click: () => {
-                this.openSetting();
-            },
-        });
-        menu.addItem({
-            icon: "iconSettings",
-            label: "A custom setting dialog (by svelte)",
-            click: () => {
-                this.openDIYSetting();
-            },
-        });
-        if (this.isMobile) {
-            menu.fullscreen();
-        } else {
-            menu.open({
-                x: rect.right,
-                y: rect.bottom,
-                isLeft: true,
-            });
-        }
-    }
+    // private addMenu(rect?: DOMRect) {
+    //     const menu = new Menu("topBarSample", () => {
+    //         console.log(this.i18n.byeMenu);
+    //     });
+    //     menu.addSeparator();
+    //     menu.addItem({
+    //         icon: "iconSettings",
+    //         label: "Official Setting Dialog",
+    //         click: () => {
+    //             this.openSetting();
+    //         },
+    //     });
+    //     menu.addItem({
+    //         icon: "iconSettings",
+    //         label: "A custom setting dialog (by svelte)",
+    //         click: () => {
+    //             this.openDIYSetting();
+    //         },
+    //     });
+    //     if (this.isMobile) {
+    //         menu.fullscreen();
+    //     } else {
+    //         menu.open({
+    //             x: rect.right,
+    //             y: rect.bottom,
+    //             isLeft: true,
+    //         });
+    //     }
+    // }
 }

@@ -4,7 +4,7 @@
  * @Date         : 2024-04-19 18:30:12
  * @FilePath     : /src/libs/index.d.ts
  * @LastEditTime : 2024-04-30 16:39:54
- * @Description  : 
+ * @Description  :
  */
 type TSettingItemType = "checkbox" | "select" | "textinput" | "textarea" | "number" | "slider" | "button" | "hint" | "custom";
 
@@ -25,15 +25,15 @@ interface ISettingItemCore {
     }
 }
 
-interface ISettingItem extends ISettingItemCore {
+
+interface ISettingsItem extends ISettingItemCore {
     title: string;
     description: string;
     direction?: "row" | "column";
+    // content: any;
 }
 
-
-//Interface for setting-utils
-interface ISettingUtilsItem extends ISettingItem {
+interface ISettingUtilsItem extends ISettingsItem {
     action?: {
         callback: () => void;
     }

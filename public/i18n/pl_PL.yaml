@@ -29,6 +29,19 @@ settings:
   ClipboardConverter:
     title: Select paste conversion
     text: Which conversion to apply when pasting a link from clipboard
-  Blacklist:
+    options:
+      oembed: Oembed
+      bookmarkCard: Bookmark Card
+  OembedBlacklist:
     title: Blacklist
     text: List of domains to to skip conversion for (one per line)
+    placeholder: Enter domains to block
+  BookmarkCardBlacklist:
+    title: Blacklist
+    text: List of domains to to skip conversion for (one per line)
+    placeholder: Enter domains to block
+
+SettingGroups:
+  general: ⚙ General
+  oembed: 👁‍🗨 Oembed
+  bookmarkCard: 🔖 Bookmark card
