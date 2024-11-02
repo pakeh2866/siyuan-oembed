@@ -107,15 +107,7 @@ export const generateBookmarkCard = async (config?: LinkData) => {
     }
 };
 
-export const openDialog = (args?: {
-    title: string;
-    placeholder?: string;
-    defaultText?: string;
-    confirm?: (text: string) => void;
-    cancel?: () => void;
-    width?: string;
-    height?: string;
-}) => {
+export const URLInputDialog = () => {
     return new Promise((resolve, reject) => {
         const dialog = new Dialog({
             title: i18n.insertURLDialogTitle,
@@ -155,7 +147,7 @@ export const toggleBookmarkCard = async (protyle: Protyle): Promise<void> => {
     }
 
     try {
-        const link = (await openDialog()) as string;
+        const link = (await URLInputDialog()) as string;
 
         if (!link || !regexp.url.test(link)) {
             return;
@@ -242,7 +234,7 @@ export const toggleOembed = async (protyle: Protyle): Promise<void> => {
     }
 
     try {
-        const link = (await openDialog()) as string;
+        const link = (await URLInputDialog()) as string;
 
         if (!link || !regexp.url.test(link)) {
             return;
@@ -276,7 +268,7 @@ export const processSelectedBlocks = async (
                 // if the block is empty, open the dialog to get the link
                 if (isEmptyParagraphBlock(item)) {
                     logger.debug("Block is empty, opening a link for dialog");
-                    link = (await openDialog()) as string;
+                    link = (await URLInputDialog()) as string;
                 }
                 // if the block is not empty,
                 else {

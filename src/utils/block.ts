@@ -86,36 +86,6 @@ export const isEmptyParagraphBlock = (element: HTMLElement): boolean => {
     );
 };
 
-export const genHtmlBlock = (data: DOMStringMap): string => {
-    return `<div data-node-id="${data.id}" data-node-index="${data.index}" data-type="NodeHTMLBlock" data-oembed="true" class="render-node protyle-wysiwyg--select" updated="${data.updated}" data-subtype="block">
-    <div class="protyle-icons">
-        <span class="b3-tooltips__nw b3-tooltips protyle-icon protyle-icon--first protyle-action__edit" aria-label="Edit">
-            <svg><use xlink:href="#iconEdit"></use></svg>
-        </span>
-        <span class="b3-tooltips__nw b3-tooltips protyle-icon protyle-action__menu protyle-icon--last" aria-label="More">
-            <svg><use xlink:href="#iconMore"></use></svg>
-        </span>
-    </div>
-    <div>
-        <protyle-html data-content="${data.content}"></protyle-html>
-        <span style="position: absolute"></span>
-    </div>
-    <div class="protyle-attr" contenteditable="false"></div></div>`;
-};
-
-/**
- * Returns an array of all elements matching the given CSS selector that are
- * descendants of the given parent element.
- *
- * @param {string} selector The CSS selector to match.
- * @param {ParentNode} [parent=document] The parent element to search.
- * @return {HTMLElement[]} An array of matching elements.
- */
-export const getAll = <ElementType extends HTMLElement>(
-    selector: string,
-    parent: ParentNode = document
-): ElementType[] => Array.prototype.slice.call(parent.querySelectorAll<ElementType>(selector), 0);
-
 export const extractUrlFromBlock = (block: HTMLElement): string | null => {
     const editElement = block.querySelector<HTMLElement>('[contenteditable="true"]');
     if (!editElement) return null;
@@ -140,64 +110,6 @@ export const isNotEditBlock = (element: Element) => {
         ].includes(element.getAttribute("data-type")) ||
         (element.getAttribute("data-type") === "NodeCodeBlock" && element.classList.contains("render-node"))
     );
-};
-
-export const focusByWbr = (element: Element, range: Range) => {
-    const wbrElements = element.querySelectorAll("wbr");
-    console.log("🚀 ~ file: utils.ts:852 ~ focusByWbr ~ wbrElements:", wbrElements);
-    if (wbrElements.length === 0) {
-        return;
-    }
-    // 没找到 wbr 产生多个的地方，先顶顶
-    wbrElements.forEach((item, index) => {
-        if (index !== 0) {
-            item.remove();
-        }
-    });
-    const wbrElement = wbrElements[0];
-    if (!wbrElement.previousElementSibling) {
-        if (wbrElement.previousSibling) {
-            // text<wbr>
-            range.setStart(wbrElement.previousSibling, wbrElement.previousSibling.textContent.length);
-        } else if (wbrElement.nextSibling) {
-            if (wbrElement.nextSibling.nodeType === 3) {
-                // <wbr>text
-                range.setStart(wbrElement.nextSibling, 0);
-            } else {
-                // <wbr><span>a</span>
-                range.setStartAfter(wbrElement);
-            }
-        } else {
-            // 内容为空
-            range.setStart(wbrElement.parentElement, 0);
-        }
-    } else {
-        const wbrPreviousSibling = hasPreviousSibling(wbrElement);
-        if (wbrPreviousSibling && wbrElement.previousElementSibling.isSameNode(wbrPreviousSibling)) {
-            if (wbrElement.previousElementSibling.lastChild?.nodeType === 3) {
-                // <em>text</em><wbr> 需把光标放在里面，因为 chrome 点击后也是默认在里面
-                range.setStart(
-                    wbrElement.previousElementSibling.lastChild,
-                    wbrElement.previousElementSibling.lastChild.textContent.length
-                );
-            } else if (
-                wbrPreviousSibling.nodeType !== 3 &&
-                (wbrPreviousSibling as HTMLElement).classList.contains("img")
-            ) {
-                // <img><wbr>, 删除图片后的唯一的一个字符
-                range.setStartAfter(wbrPreviousSibling);
-            } else {
-                // <span class="hljs-function"><span class="hljs-keyword">fun</span></span>
-                range.setStartBefore(wbrElement);
-            }
-        } else {
-            // <em>text</em>text<wbr>
-            range.setStart(wbrElement.previousSibling, wbrElement.previousSibling.textContent.length);
-        }
-    }
-    range.collapse(true);
-    wbrElement.remove();
-    focusByRange(range);
 };
 
 export const focusByRange = (range: Range) => {

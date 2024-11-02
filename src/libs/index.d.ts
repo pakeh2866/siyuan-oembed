@@ -25,19 +25,9 @@ interface ISettingItemCore {
     }
 }
 
-
 interface ISettingsItem extends ISettingItemCore {
     title: string;
     description: string;
     direction?: "row" | "column";
     // content: any;
-}
-
-interface ISettingUtilsItem extends ISettingsItem {
-    action?: {
-        callback: () => void;
-    }
-    createElement?: (currentVal: any) => HTMLElement;
-    getEleVal?: (ele: HTMLElement) => any;
-    setEleVal?: (ele: HTMLElement, val: any) => void;
 }
