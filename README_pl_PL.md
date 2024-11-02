@@ -1,9 +1,25 @@
-# SiYuan Oembed i karty zakładek w stylu Ghost
+<p align="center">
+<img alt="SiYuan" src="icon.png">
+<br>
+<em>SiYuan Oembed and Ghost-style bookmark cards</em>
+<br><br>
+<a title="Releases" target="_blank" href="https://github.com/anarion80/siyuan-oembed/releases"><img src="https://img.shields.io/github/v/release/anarion80/siyuan-oembed?style=flat-square&color=9CF
+"></a>
+<a title="Downloads" target="_blank" href="https://github.com/anarion80/siyuan-oembed/releases"><img src="https://img.shields.io/github/downloads/anarion80/siyuan-oembed/total.svg?style=flat-square&color=blueviolet"></a>
+<br>
+<a title="AGPLv3" target="_blank" href="https://www.gnu.org/licenses/agpl-3.0.txt"><img src="https://img.shields.io/github/license/anarion80/siyuan-oembed"></a>
+<a title="Code Size" target="_blank" href="https://github.com/anarion80/siyuan-oembed"><img src="https://img.shields.io/github/languages/code-size/anarion80/siyuan-oembed.svg?style=flat-square&color=yellow"></a>
+<a title="GitHub Pull Requests" target="_blank" href="https://github.com/anarion80/siyuan-oembed/pulls"><img src="https://img.shields.io/github/issues-pr-closed/anarion80/siyuan-oembed.svg?style=flat-square&color=FF9966"></a>
+<br>
+<a title="GitHub Commits" target="_blank" href="https://github.com/anarion80/siyuan-oembed/commits/master"><img src="https://img.shields.io/github/commit-activity/m/anarion80/siyuan-oembed.svg?style=flat-square"></a>
+<a title="Last Commit" target="_blank" href="https://github.com/anarion80/siyuan-oembed/commits/master"><img src="https://img.shields.io/github/last-commit/anarion80/siyuan-oembed.svg?style=flat-square&color=FF9900"></a>
+<br>
+<a href="https://buymeacoffee.com/anarion" target="_blank"><img src="https://raw.githubusercontent.com/pachadotdev/buymeacoffee-badges/main/bmc-yellow.svg" alt="Buy Me Coffee"/></a>
+</p>
 
-[![Last commit](https://img.shields.io/github/last-commit/anarion80/siyuan-oembed)](https://github.com/anarion80/siyuan-oembed/commits/main)
-[![Releases](https://img.shields.io/github/v/release/anarion80/siyuan-oembed?include_prereleases&color=success)](https://github.com/anarion80/siyuan-oembed/releases)
-![GitHub License](https://img.shields.io/github/license/anarion80/siyuan-oembed)
-[![BuyMeACoffee](https://raw.githubusercontent.com/pachadotdev/buymeacoffee-badges/main/bmc-yellow.svg)](https://buymeacoffee.com/anarion)
+<p align="center">
+<a href="README.md">English</a> | <a href="README_pl_PL.md">Polish</a>
+</p>
 
 ## ✨ Opis wtyczki
 
@@ -71,7 +87,8 @@ Kolejnym ograniczeniem jest już wspomniany brak osadzeń Facebook/Instagram prz
 
 - [SiYuan](https://github.com/siyuan-note/siyuan) za użyteczne narzędzie jakim jest SiYuan. Użyłem niektórych ich funkcji bezpośrednio, ponieważ nie były dostępne przez API.
 - [Przykład wtyczki SiYuan z vite i svelte](https://github.com/siyuan-note/plugin-sample-vite-svelte) - bardzo przydatna baza dla developmentu wtyczek.
-- [Zuoqiu-Yingyi i ich siyuan-packages-monorepo](https://github.com/Zuoqiu-Yingyi/siyuan-packages-monorepo).
+- [Zuoqiu-Yingyi i siyuan-packages-monorepo](https://github.com/Zuoqiu-Yingyi/siyuan-packages-monorepo).
 - [Przewodnik rozwoju wtyczek SiYuan](https://docs.siyuan-note.club/en/guide/plugin/sy-plugin-dev-quick-start.html?utm_source=liuyun.io) - bardzo przydatne wprowadzenie do developmentu wtyczek.
-- [Zuoez02 i ich plugin-card-link](https://github.com/zuoez02/siyuan-plugin-card-link).
-- [Frostime i ich siyuan-dailynote-today](https://github.com/frostime/siyuan-dailynote-today).
+- [Zuoez02 i plugin-card-link](https://github.com/zuoez02/siyuan-plugin-card-link).
+- [Frostime i siyuan-dailynote-today](https://github.com/frostime/siyuan-dailynote-today).
+- [Hqweay i siyuan-hqweay-go](https://github.com/hqweay/siyuan-hqweay-go).
