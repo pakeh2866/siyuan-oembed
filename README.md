@@ -37,7 +37,7 @@ It works like this:
 ![example usage](asset/example_usage.gif)
 
 > :exclamation:
-> Unfortunately, X.com (formerly Twitter) embeds are script-based, and I haven't figured out yet why the script is not executed despite having script exeuction enabled in settings (see: [my post on Liuyun.io](https://liuyun.io/article/1729866570402)) :exclamation:
+> Unfortunately, X.com (formerly Twitter) embeds are script-based, and I haven't figured out yet why the script is not executed despite having script execution enabled in settings (see: [my post on Liuyun.io](https://liuyun.io/article/1729866570402)) :exclamation:
 >
 > Similarly, Facebook/Instagram requires an API_KEY to be able to embed their content
 
