@@ -65,7 +65,6 @@ body:
       required: true
     attributes:
       label: What version of Siyuan has the issue?
-      placeholder: core-
       description: >
         Can be found in: `SiYuan` ⇒ `Settings` ⇒ `About` ⇒ `Current version`.
   - type: input
