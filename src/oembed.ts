@@ -1,6 +1,5 @@
-// import {URL} from 'url'
-
 import { logger } from "@/utils/logger"
+import { fetchWithProxy } from "./utils/fetch"
 
 type Provider = {
     provider_name: string
@@ -42,8 +41,20 @@ namespace ProvidersCache {
 
 const getProviders = async (): Promise<Providers> => {
     if (!ProvidersCache.cache) {
-        const res = await fetch('https://oembed.com/providers.json');
-        ProvidersCache.cache = (await res.json()) as Providers;
+        const providersUrl = "https://oembed.com/providers.json";
+        const responseBody = await fetchWithProxy(providersUrl);
+
+        if (!responseBody) {
+            return null;
+        }
+
+        try {
+            const providers = JSON.parse(responseBody);
+            ProvidersCache.cache = providers;
+        } catch (error) {
+            logger.error("Error parsing providers JSON:", error);
+            return null;
+        }
     }
 
     return ProvidersCache.cache;
@@ -100,8 +111,9 @@ export const getOembed = async (urlString: string ): Promise<string> => {
 
         let data: OEmbedData | null = null;
         try {
-            const res = await fetch(url.toString())
-            data = (await res.json()) as OEmbedData;
+            const responseBody = await fetchWithProxy(url.toString());
+
+            data = JSON.parse(responseBody) as OEmbedData;
             logger.debug("Oembed data:", { data });
         } catch (error) {
             logger.error("Error fetching oembed data:", { error });
