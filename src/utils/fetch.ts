@@ -1,4 +1,5 @@
 import { forwardProxy } from "@/api";
+import { logger } from "./logger";
 
 /**
  * Fetches JSON data from a URL using forward proxy
@@ -27,7 +28,7 @@ export const fetchWithProxy = async (url: string): Promise<string | null> => {
 
         return res.body;
     } catch (error) {
-        console.error("Error fetching data:", error);
+        logger.error("Error fetching data:", error);
         return null;
     }
 };

@@ -62,14 +62,12 @@ export default class OembedPlugin extends Plugin {
     }
 
     async onunload() {
-        console.log(this.i18n.byePlugin);
         this.eventBus.on("click-blockicon", this.blockIconEventBindThis);
         showMessage("Unloading Siyuan-Oembed");
-        console.log("onunload");
     }
 
     uninstall() {
-        console.log("uninstall");
+        logger.debug("uninstall");
     }
 
     openSetting(): void {

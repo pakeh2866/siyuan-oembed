@@ -102,7 +102,7 @@ export const generateBookmarkCard = async (config?: LinkData) => {
                     </div>`;
         }
     } catch (e) {
-        console.error(e);
+        logger.error(e);
         return;
     }
 };
