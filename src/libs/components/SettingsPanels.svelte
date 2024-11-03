@@ -5,11 +5,16 @@
 
     export let panels: {
         name: string;
+        icon: string;
         items: ISettingsItem[];
     }[];
-    let names = panels.map((panel) => panel.name);
 
-    let focusName = names[0];
+    let groups = panels.map((panel) => ({
+        name: panel.name,
+        icon: panel.icon
+    }));
+
+    let focusName = groups[0].name;
 
     const dispatch = createEventDispatcher();
 
@@ -21,15 +26,21 @@
 
 <div class="fn__flex-1 fn__flex config__panel">
     <ul class="b3-tab-bar b3-list b3-list--background">
-        {#each names as name}
-            <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
+        {#each groups as group}
+            <!-- svelte-ignore a11y-no-noninteractive-element-to-interactive-role -->
             <li
                 data-name="editor"
-                class:b3-list-item--focus={name === focusName}
+                class:b3-list-item--focus={group.name === focusName}
                 class="b3-list-item"
-                on:click={() => {focusName = name}} on:keydown={() => {}}
+                role="button"
+                on:click={() => {focusName = group.name}} on:keydown={() => {}}
             >
-                <span class="b3-list-item__text">{i18n.SettingGroups[name]}</span>
+                {#if group.icon}
+                    <svg class="b3-list-item__graphic">
+                        <use xlink:href={group.icon} />
+                    </svg>
+                {/if}
+                <span class="b3-list-item__text">{i18n.SettingGroups[group.name]}</span>
             </li>
         {/each}
     </ul>
@@ -52,5 +63,13 @@
     }
     .config__panel>ul>li {
         padding-left: 1rem;
+    }
+    @media (max-width: 750px) {
+        .config__panel>ul>li {
+            padding: 1rem 1.5rem 1rem 1rem ;
+        }
+        .b3-list-item {
+            padding: 0
+        }
     }
 </style>

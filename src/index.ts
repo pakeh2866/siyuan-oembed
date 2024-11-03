@@ -20,6 +20,7 @@ import Settings from "@/libs/components/Settings.svelte";
 export default class OembedPlugin extends Plugin {
     customTab: () => IModel;
     private blockIconEventBindThis = this.blockIconEvent.bind(this);
+    private isMobile: boolean;
     init() {
         setPlugin(this);
     }
@@ -31,6 +32,7 @@ export default class OembedPlugin extends Plugin {
         let start = performance.now();
 
         const frontEnd = getFrontend();
+        this.isMobile = frontEnd === "mobile" || frontEnd === "browser-mobile";
         const backEnd = getBackend();
         logger.debug("Environment", { backEnd, frontEnd });
         this.addIcons(`<symbol id="iconOembed" viewBox="0 0 32 32">
@@ -73,10 +75,10 @@ export default class OembedPlugin extends Plugin {
     openSetting(): void {
         let dialog = new Dialog({
             //@ts-ignore
-            title: `${this.i18n.settings.name}`,
-            content: `<div id="SettingsPanel" style="height: 100%"></div>`,
-            width: "50%",
-            height: "32rem",
+            title: `${this.displayName} <code class="fn__code">${this.name}</code>`,
+            content: `<div id="SettingsPanel" class="fn__flex-column" />`,
+            width: this.isMobile ? "92vw" : "720px",
+            height: this.isMobile ? undefined : "600px",
             destroyCallback: () => {
                 panel.$destroy();
             },

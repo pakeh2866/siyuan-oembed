@@ -7,63 +7,76 @@
 
     let contents = i18n.settings;
 
-    let groups = {
-        general: [
-            {
-                name: "CatchClipboard",
-                type: "checkbox",
-            },
-            {
-                name: "ClipboardConverter",
-                type: "select",
-            },
-            {
-                name: "EnableDebug",
-                type: "checkbox",
-            },
-        ],
-        oembed: [
-            {
-                name: "OembedBlacklist",
-                type: "textarea",
-                direction: "row",
-            },
-        ],
-        bookmarkCard: [
-            {
-                name: "BookmarkCustomCSS",
-                type: "textarea",
-                direction: "row",
-            },
-            {
-                name: "BookmarkCardBlacklist",
-                type: "textarea",
-                direction: "row",
-            },
-        ],
-    };
+    let groups = [{
+            name: "general",
+            icon: "#iconSettings",
+            items: [
+                {
+                    name: "CatchClipboard",
+                    type: "checkbox",
+                    direction: "column",
+                },
+                {
+                    name: "ClipboardConverter",
+                    type: "select",
+                    direction: "column",
+                },
+                {
+                    name: "EnableDebug",
+                    type: "checkbox",
+                    direction: "column",
+                },
+            ]},
+        {
+            name: "oembed",
+            icon: "#iconOembed",
+            items: [
+                {
+                    name: "OembedBlacklist",
+                    type: "textarea",
+                    direction: "row",
+                },
+            ]},
+        {
+            name: "bookmarkCard",
+            icon: "#iconLink",
+            items: [
+                {
+                    name: "BookmarkCustomCSS",
+                    type: "textarea",
+                    direction: "row",
+                },
+                {
+                    name: "BookmarkCardBlacklist",
+                    type: "textarea",
+                    direction: "row",
+                },
+            ]},
+        ];
 
-    let allSettingPanels: {
+    let allSettingsPanels: {
         name: string;
+        icon: string;
         items: ISettingsItem[];
     }[] = [];
 
-    for (let key in groups) {
+    for (let group of groups) {
         let items: ISettingsItem[] = [];
-        for (let item of groups[key]) {
+        for (let item of group.items) {
             items.push({
-                type: item.type,
+                type: item.type as TSettingItemType,
                 key: item.name,
-                value: settings.get(item.name),
+                value: settings.get(item.name as SettingsKey),
                 title: contents[item.name]["title"],
                 description: contents[item.name]["text"],
                 placeholder: contents[item.name]["placeholder"],
                 options: contents[item.name]["options"],
-                direction: item.direction
+                direction: item.direction === "row" || item.direction === "column" ? item.direction : "column"
             });
         }
-        allSettingPanels.push({
-            name: key,
+        allSettingsPanels.push({
+            name: group.name,
+            icon: group.icon,
             items: items,
         });
     }
@@ -82,4 +95,4 @@
     }
 </script>
 
-<Panels panels={allSettingPanels} on:click={onClick}/>
+<Panels panels={allSettingsPanels} on:click={onClick}/>

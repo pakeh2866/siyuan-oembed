@@ -46,6 +46,6 @@ settings:
     placeholder: Enter your custom CSS
 
 SettingGroups:
-  general: ⚙ General
-  oembed: 👁‍🗨 Oembed
-  bookmarkCard: 🔖 Bookmark card
+  general: General
+  oembed: Oembed
+  bookmarkCard: Bookmark card
