@@ -17,9 +17,9 @@ getTab: Print out all opened custom tabs in the debugger
 name: Oembed
 hintTitle: About
 
-insertURLDialogTitle: Insert URL
+insertURLDialogTitle: 插入链接
 settings:
-  name: Settings
+  name: 设置
   EnableDebug:
     title: Enable debug
     text: Enable verbose debug to help with troubleshooting
@@ -30,8 +30,8 @@ settings:
     title: Select paste conversion
     text: Which conversion to apply when pasting a link from clipboard
     options:
-      oembed: Oembed
-      bookmarkCard: Bookmark Card
+      oembed: Oembed链接
+      bookmarkCard: 书签卡片
   OembedBlacklist:
     title: Blocklist
     text: List of domains to skip conversion for (one per line)
