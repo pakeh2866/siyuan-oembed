@@ -1,1 +1,51 @@
+---
+addTopBarIcon: Add a top bar icon by plugin
+cancel: 取消
+save: 保存
+byeMenu: 'Bye, Menu!'
+helloPlugin: 'Hello, Plugin!'
+byePlugin: 'Bye, Plugin!'
+showDialog: Show dialog
+removedData: Data deleted
+confirmRemove: Confirm to delete the data in ${name}?
+insertEmoji: Insert Emoji
+toggleOembed: Toggle Oembed Link
+toggleBookmarkCard: Toggle Bookmark Card
+removeSpace: Remove Space
+convertOembed: 转成Oembed链接
+getTab: Print out all opened custom tabs in the debugger
+name: Oembed
+hintTitle: About
 
+insertURLDialogTitle: Insert URL
+settings:
+  name: Settings
+  EnableDebug:
+    title: Enable debug
+    text: Enable verbose debug to help with troubleshooting
+  CatchClipboard:
+    title: Catch clipboard links
+    text: Automatically transform links pasted from clipboard
+  ClipboardConverter:
+    title: Select paste conversion
+    text: Which conversion to apply when pasting a link from clipboard
+    options:
+      oembed: Oembed
+      bookmarkCard: Bookmark Card
+  OembedBlacklist:
+    title: Blocklist
+    text: List of domains to skip conversion for (one per line)
+    placeholder: Enter domains to block
+  BookmarkCardBlacklist:
+    title: Blocklist
+    text: List of domains to skip conversion for (one per line)
+    placeholder: Enter domains to block
+  BookmarkCustomCSS:
+    title: Custom CSS for bookmark cards
+    text: Enter your custom CSS to style the bookmark to your liking. You can style all `kg-card-*` and `kg-bookmark-*` classes. Don't include enclosing <style> tags.
+    placeholder: Enter your custom CSS
+
+SettingGroups:
+  general: General
+  oembed: Oembed
+  bookmarkCard: Bookmark card
