@@ -1,19 +1,19 @@
 ---
-addTopBarIcon: Add a top bar icon by plugin
+addTopBarIcon: 添加一个顶部栏图标
 cancel: 取消
 save: 保存
-byeMenu: 'Bye, Menu!'
-helloPlugin: 'Hello, Plugin!'
-byePlugin: 'Bye, Plugin!'
-showDialog: Show dialog
-removedData: Data deleted
-confirmRemove: Confirm to delete the data in ${name}?
-insertEmoji: Insert Emoji
-toggleOembed: Toggle Oembed Link
-toggleBookmarkCard: Toggle Bookmark Card
-removeSpace: Remove Space
+byeMenu: '再见，菜单！'
+helloPlugin: '你好，插件！'
+byePlugin: '再见，插件！'
+showDialog: 显示对话框
+removedData: 已删除数据
+confirmRemove: 确认删除${name}中的数据吗 ?
+insertEmoji: 插入表情符号
+toggleOembed: 切换 Oembed 链接
+toggleBookmarkCard: 切换书签卡片
+removeSpace: 删除空格
 convertOembed: 转成Oembed链接
-getTab: Print out all opened custom tabs in the debugger
+getTab: 打印出调试器
 name: Oembed
 hintTitle: About
 
@@ -21,31 +21,31 @@ insertURLDialogTitle: 插入链接
 settings:
   name: 设置
   EnableDebug:
-    title: Enable debug
-    text: Enable verbose debug to help with troubleshooting
+    title: 启用调试
+    text: 启用详细调试以协助故障排查
   CatchClipboard:
-    title: Catch clipboard links
-    text: Automatically transform links pasted from clipboard
+    title: 捕获剪贴板中的链接
+    text: 自动转换从剪贴板粘贴的链接
   ClipboardConverter:
-    title: Select paste conversion
-    text: Which conversion to apply when pasting a link from clipboard
+    title: 选择粘贴转换
+    text: 从剪贴板粘贴链接时应用哪种转换
     options:
       oembed: Oembed链接
       bookmarkCard: 书签卡片
   OembedBlacklist:
-    title: Blocklist
-    text: List of domains to skip conversion for (one per line)
-    placeholder: Enter domains to block
+    title: 黑名单
+    text: 需跳过转换的域名列表 (one per line)
+    placeholder: 输入要屏蔽的域名
   BookmarkCardBlacklist:
-    title: Blocklist
-    text: List of domains to skip conversion for (one per line)
-    placeholder: Enter domains to block
+    title: 黑名单
+    text: 需跳过转换的域名列表 (one per line)
+    placeholder: 输入要屏蔽的域名
   BookmarkCustomCSS:
-    title: Custom CSS for bookmark cards
-    text: Enter your custom CSS to style the bookmark to your liking. You can style all `kg-card-*` and `kg-bookmark-*` classes. Don't include enclosing <style> tags.
-    placeholder: Enter your custom CSS
+    title: 书签卡片的自定义 CSS
+    text: 输入您的自定义 CSS 来按照您的喜好设置书签样式. You can style all `kg-card-*` and `kg-bookmark-*` classes. Don't include enclosing <style> tags.
+    placeholder: 输入您的自定义 CSS
 
 SettingGroups:
-  general: General
-  oembed: Oembed
-  bookmarkCard: Bookmark card
+  general: 一般设置
+  oembed: Oembed书签
+  bookmarkCard: 卡片书签
